@@ -1,0 +1,22 @@
+{
+    "name": "2upmedia/hooky",
+    "description": "Easily allow your classes to be extendable",
+    "version": "0.1.0",
+    "authors": [
+        {
+            "name": "Jorge Colon",
+            "email": "jorge@2upmedia.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=5.4",
+        "ext-SPL": "*",
+        "ext-Reflection": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "_2UpMedia\\Hooky\\": ["src/", "tests/"]
+        }
+    }
+}
