@@ -217,7 +217,7 @@ trait HooksTrait
      *
      * @param object $classInstance
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
@@ -245,7 +245,7 @@ trait HooksTrait
     /**
      * @param object $classInstance
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
@@ -273,7 +273,7 @@ trait HooksTrait
     /**
      * @param object $classInstance
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
@@ -295,7 +295,7 @@ trait HooksTrait
     /**
      * @param object $classInstance
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
@@ -351,7 +351,7 @@ trait HooksTrait
     /**
      * @param object $classInstance
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
@@ -379,7 +379,7 @@ trait HooksTrait
     /**
      * @param object $classInstance
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
@@ -407,7 +407,7 @@ trait HooksTrait
     /**
      * @param object $classInstance
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
@@ -438,7 +438,7 @@ trait HooksTrait
     /**
      * @param object $classInstance
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
