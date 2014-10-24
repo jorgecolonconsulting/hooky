@@ -1,7 +1,7 @@
 <?php
 namespace _2UpMedia\Hooky;
 
-class Hooks {
+class Constants {
     const PUBLIC_ACCESSIBLE = 256;
 
     const PROTECTED_ACCESSIBLE = 512;

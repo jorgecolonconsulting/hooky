@@ -14,25 +14,38 @@ class Client {
 
     public function getText($resourceLocation)
     {
-        if (($return = $this->callBeforeHooks($this, __METHOD__, [&$resourceLocation])) !== null) return $return;
+        if (($return = $this->callBeforeHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $return;
+        }
 
         $coreReturn = $this->_getText($resourceLocation);
 
-        if (($return = $this->callAfterHooks($this, __METHOD__, [&$resourceLocation])) !== null) return $return;
+        if (($return = $this->callAfterHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $return;
+        }
 
         return $coreReturn;
     }
 
-    protected function _getText($resourceLocation){
-        if (($return = $this->callOnceBefore_getTextHooks($this, __METHOD__)) !== null) return $return;
+    protected function _getText($resourceLocation)
+    {
+        if (($return = $this->callOnceBefore_getTextHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $return;
+        }
 
-        if (($return = $this->callBefore_getTextHooks($this, __METHOD__)) !== null) return $return;
+        if (($return = $this->callBefore_getTextHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $return;
+        }
 
         $coreReturn = $resourceLocation;
 
-        if (($return = $this->callAfter_getTextHooks($this, __METHOD__)) !== null) return $return;
+        if (($return = $this->callAfter_getTextHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $return;
+        }
 
-        if (($return = $this->callOnceAfter_getTextHooks($this, __METHOD__)) !== null) return $return;
+        if (($return = $this->callOnceAfter_getTextHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $return;
+        }
 
         return $coreReturn;
     }

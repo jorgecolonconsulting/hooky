@@ -4,10 +4,11 @@ namespace _2UpMedia\Hooky\Integration;
 require_once __DIR__.'/../fixtures/Client.php'; // TODO: figure out how to remove this without losing code coverage
 
 use _2UpMedia\Hooky\Fixtures\Client;
-use _2UpMedia\Hooky\Hooks;
+use _2UpMedia\Hooky\Constants;
 use _2UpMedia\Hooky\CancelPropagationException;
 
-class HooksTraitTest extends \PHPUnit_Framework_TestCase {
+class HooksTraitTest extends \PHPUnit_Framework_TestCase
+{
 
     /**
      * @var Client
@@ -24,7 +25,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $this->callInaccessibleMethodWithArgs(
             $this->client,
             'setDefaultAccessibility',
-            [Hooks::PUBLIC_ACCESSIBLE | Hooks::PROTECTED_ACCESSIBLE]
+            [Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE]
         );
 
         /**
@@ -32,13 +33,13 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
          */
         $that = $this;
 
-        $this->client->before_getText(function ($instance) use ($that) {
+        $this->client->before_getTextHook(function ($instance, $resourceLocation) use ($that) {
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
         });
 
-        $this->client->beforeGetText(array($this, 'getBeforeGetTextCallable'));
+        $this->client->beforeGetTextHook(array($this, 'getBeforeGetTextCallable'));
 
-        $this->client->beforeGetText(function ($instance, $resourceLocation) use ($that) {
+        $this->client->beforeGetTextHook(function ($instance, $resourceLocation) use ($that) {
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
             $that->assertEquals('/path/to/resource1', $resourceLocation);
         });
@@ -59,10 +60,10 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
     /**
      * @param $instance
      * @param $resourceLocation
-     * @param $that
+     *
      * @return string
      */
-    function getBeforeGetTextCallable($instance, &$resourceLocation)
+    public function getBeforeGetTextCallable($instance, &$resourceLocation)
     {
         $resourceLocation = '/path/to/resource1';
 
@@ -72,37 +73,40 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException PHPUnit_Framework_Error_Warning
+     * @expectedException \PHPUnit_Framework_Error_Warning
      * @expectedExceptionMessage Callable argument 3 'nonexistantParameter' does not
      *                           exist in original getText() method as argument 2
      */
     public function testMissingCallableParameters()
     {
-        $this->client->beforeGetText(function ($instance, $resourceLocation, $nonexistantParameter) {});
+        $this->client->beforeGetTextHook(function ($instance, $resourceLocation, $nonexistantParameter) {
+        });
 
         $this->client->getText('/path/to/resource');
     }
 
     /**
-     * @expectedException PHPUnit_Framework_Error_Warning
+     * @expectedException \PHPUnit_Framework_Error_Warning
      * @expectedExceptionMessage Callable argument 2 exists in the original getText() method
      *                           as argument 1 but is omitted in the callable
      */
     public function testMissingOriginalMethodParameters()
     {
-        $this->client->beforeGetText(function ($instance) {});
+        $this->client->beforeGetTextHook(function ($instance) {
+        });
 
         $this->client->getText('/path/to/resource');
     }
 
     /**
-     * @expectedException PHPUnit_Framework_Error_Warning
+     * @expectedException \PHPUnit_Framework_Error_Warning
      * @expectedExceptionMessage Callable argument 2 'uri' is named
      *                           'resourceLocation' in the original getText() method as argument 1
      */
     public function testMismatchingParameters()
     {
-        $this->client->beforeGetText(function ($instance, $uri) {});
+        $this->client->beforeGetTextHook(function ($instance, $uri) {
+        });
 
         $this->client->getText('/path/to/resource');
     }
@@ -134,13 +138,13 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
             ++$beforeAllCount;
         });
 
-        $this->client->beforeGetText(function ($instance, $resourceLocation) use (&$beforeMethodCount) {
+        $this->client->beforeGetTextHook(function ($instance, $resourceLocation) use (&$beforeMethodCount) {
             ++$beforeMethodCount;
 
             throw new CancelPropagationException();
         });
 
-        $this->client->beforeGetText(function ($instance, $resourceLocation) use (&$beforeMethodCount) {
+        $this->client->beforeGetTextHook(function ($instance, $resourceLocation) use (&$beforeMethodCount) {
             ++$beforeMethodCount;
         });
 
@@ -154,13 +158,13 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
             ++$onceBeforeAllCount;
         });
 
-        $this->client->onceBeforeGetText(function ($instance, $resourceLocation) use (&$onceBeforeMethodCount) {
+        $this->client->onceBeforeGetTextHook(function ($instance, $resourceLocation) use (&$onceBeforeMethodCount) {
             ++$onceBeforeMethodCount;
 
             throw new CancelPropagationException();
         });
 
-        $this->client->onceBeforeGetText(function ($instance, $resourceLocation) use (&$onceBeforeMethodCount) {
+        $this->client->onceBeforeGetTextHook(function ($instance, $resourceLocation) use (&$onceBeforeMethodCount) {
             ++$onceBeforeMethodCount;
         });
 
@@ -174,23 +178,23 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
             ++$afterAllCount;
         });
 
-        $this->client->afterGetText(function ($instance, $resourceLocation) use (&$afterMethodCount) {
+        $this->client->afterGetTextHook(function ($instance, $resourceLocation) use (&$afterMethodCount) {
             ++$afterMethodCount;
 
             throw new CancelPropagationException();
         });
 
-        $this->client->afterGetText(function ($instance, $resourceLocation) use (&$afterMethodCount) {
+        $this->client->afterGetTextHook(function ($instance, $resourceLocation) use (&$afterMethodCount) {
             ++$afterMethodCount;
         });
 
-        $this->client->onceAfterGetText(function ($instance, $resourceLocation) use (&$onceAfterMethodCount) {
+        $this->client->onceAfterGetTextHook(function ($instance, $resourceLocation) use (&$onceAfterMethodCount) {
             ++$onceAfterMethodCount;
 
             throw new CancelPropagationException();
         });
 
-        $this->client->onceAfterGetText(function ($instance, $resourceLocation) use (&$onceAfterMethodCount) {
+        $this->client->onceAfterGetTextHook(function ($instance, $resourceLocation) use (&$onceAfterMethodCount) {
             ++$onceAfterMethodCount;
         });
 
@@ -204,21 +208,27 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
             ++$onceAfterAllCount;
         });
 
-        Client::beforeConstructorHook(function ($instance, $parameterOne, $parameterTwo) use (&$beforeConstructorCount) {
-            ++$beforeConstructorCount;
+        Client::beforeConstructorHook(
+            function ($instance, $parameterOne, $parameterTwo) use (&$beforeConstructorCount) {
+                ++$beforeConstructorCount;
 
-            throw new CancelPropagationException();
-        });
+                throw new CancelPropagationException();
+            }
+        );
 
-        Client::beforeConstructorHook(function ($instance, $parameterOne, $parameterTwo) use (&$beforeConstructorCount) {
-            ++$beforeConstructorCount;
-        });
+        Client::beforeConstructorHook(
+            function ($instance, $parameterOne, $parameterTwo) use (&$beforeConstructorCount) {
+                ++$beforeConstructorCount;
+            }
+        );
 
-        Client::afterConstructorHook(function ($instance, $parameterOne, $parameterTwo) use (&$afterConstructorCount) {
-            ++$afterConstructorCount;
+        Client::afterConstructorHook(
+            function ($instance, $parameterOne, $parameterTwo) use (&$afterConstructorCount) {
+                ++$afterConstructorCount;
 
-            throw new CancelPropagationException();
-        });
+                throw new CancelPropagationException();
+            }
+        );
 
         Client::afterConstructorHook(function ($instance, $parameterOne, $parameterTwo) use (&$afterConstructorCount) {
             ++$afterConstructorCount;
@@ -228,16 +238,16 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
 
         $this->client->getText('/path/to/resource');
 
-        $this->assertEquals($beforeAllCount, 1);
-        $this->assertEquals($beforeMethodCount, 1);
-        $this->assertEquals($onceBeforeMethodCount, 1);
+        $this->assertEquals(1, $beforeAllCount);
+        $this->assertEquals(1, $beforeMethodCount);
+        $this->assertEquals(1, $onceBeforeMethodCount);
 
-        $this->assertEquals($afterAllCount, 1);
-        $this->assertEquals($afterMethodCount, 1);
-        $this->assertEquals($onceAfterMethodCount, 1);
+        $this->assertEquals(1, $afterAllCount);
+        $this->assertEquals(1, $afterMethodCount);
+        $this->assertEquals(1, $onceAfterMethodCount);
 
-        $this->assertEquals($beforeConstructorCount, 1);
-        $this->assertEquals($afterConstructorCount, 1);
+        $this->assertEquals(1, $beforeConstructorCount);
+        $this->assertEquals(1, $afterConstructorCount);
     }
 
     public function testBeforeAllEarlyReturn()
@@ -245,7 +255,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $that = $this;
         $count = 0;
 
-        $this->client->beforeGetText(function ($instance, $resourceLocation) use ($that, &$count) {
+        $this->client->beforeGetTextHook(function ($instance, $resourceLocation) use ($that, &$count) {
             ++$count;
 
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
@@ -254,20 +264,20 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
             return true;
         });
 
-        $this->client->beforeGetText(function ($instance, $resourceLocation) use ($that, &$count) {
+        $this->client->beforeGetTextHook(function ($instance, $resourceLocation) use ($that, &$count) {
             ++$count;
 
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
             $that->assertEquals('/path/to/resource', $resourceLocation);
         });
 
-        $this->client->afterGetText(function ($instance, $resourceLocation) use ($that, &$count) {
+        $this->client->afterGetTextHook(function ($instance, $resourceLocation) use ($that, &$count) {
             $that->fail("Wasn't supposed to get called");
         });
 
         $this->client->getText('/path/to/resource');
 
-        $this->assertEquals($count, 1);
+        $this->assertEquals(1, $count);
     }
 
     public function testOnceBeforePublicMethod()
@@ -278,7 +288,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $that = $this;
         $count = 0;
 
-        $this->client->onceBeforeGetText(function ($instance, $resourceLocation) use ($that, &$count) {
+        $this->client->onceBeforeGetTextHook(function ($instance, $resourceLocation) use ($that, &$count) {
             ++$count;
 
             $resourceLocation = '/path/to/resource1';
@@ -298,7 +308,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $this->callInaccessibleMethodWithArgs(
             $this->client,
             'setDefaultAccessibility',
-            [Hooks::PUBLIC_ACCESSIBLE | Hooks::PROTECTED_ACCESSIBLE]
+            [Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE]
         );
 
         /**
@@ -307,7 +317,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $that = $this;
         $count = 0;
 
-        $this->client->onceBefore_getText(function ($instance) use ($that, &$count) {
+        $this->client->onceBefore_getTextHook(function ($instance, $resourceLocation) use ($that, &$count) {
             ++$count;
 
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
@@ -348,7 +358,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $that = $this;
         $count = 0;
 
-        $this->client->onceAfterGetText(function ($instance, &$resourceLocation) use ($that, &$count) {
+        $this->client->onceAfterGetTextHook(function ($instance, &$resourceLocation) use ($that, &$count) {
             ++$count;
 
             $resourceLocation = '/path/to/resource1';
@@ -389,7 +399,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $this->callInaccessibleMethodWithArgs(
             $this->client,
             'setDefaultAccessibility',
-            [Hooks::PUBLIC_ACCESSIBLE | Hooks::PROTECTED_ACCESSIBLE]
+            [Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE]
         );
 
         /**
@@ -398,7 +408,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $that = $this;
         $count = 0;
 
-        $this->client->after_getText(function ($instance) use ($that, &$count) {
+        $this->client->after_getTextHook(function ($instance, $resourceLocation) use ($that, &$count) {
             ++$count;
 
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
@@ -415,7 +425,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $this->callInaccessibleMethodWithArgs(
             $this->client,
             'setDefaultAccessibility',
-            [Hooks::PUBLIC_ACCESSIBLE | Hooks::PROTECTED_ACCESSIBLE | Hooks::PRIVATE_ACCESSIBLE]
+            [Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE | Constants::PRIVATE_ACCESSIBLE]
         );
 
         /**
@@ -424,7 +434,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $that = $this;
         $count = 0;
 
-        $this->client->afterPrivateMethod(function ($instance) use ($that, &$count) {
+        $this->client->afterPrivateMethodHook(function ($instance) use ($that, &$count) {
             ++$count;
 
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
@@ -441,7 +451,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $this->callInaccessibleMethodWithArgs(
             $this->client,
             'setDefaultAccessibility',
-            [Hooks::PUBLIC_ACCESSIBLE | Hooks::PROTECTED_ACCESSIBLE]
+            [Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE]
         );
 
         /**
@@ -449,18 +459,18 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
          */
         $that = $this;
 
-        $this->client->after_getText(function ($instance) use ($that) {
+        $this->client->after_getTextHook(function ($instance, $resourceLocation) use ($that) {
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
         });
 
-        $this->client->afterGetText(function ($instance, &$resourceLocation) use ($that) {
+        $this->client->afterGetTextHook(function ($instance, &$resourceLocation) use ($that) {
             $resourceLocation = '/path/to/resource1';
 
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
             $that->assertEquals('/path/to/resource1', $resourceLocation);
         });
 
-        $this->client->afterGetText(function ($instance, $resourceLocation) use ($that) {
+        $this->client->afterGetTextHook(function ($instance, $resourceLocation) use ($that) {
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
             $that->assertEquals('/path/to/resource1', $resourceLocation);
         });
@@ -494,7 +504,11 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
      */
     public function testMethodNotRestrictedWithProtectedAccessibility()
     {
-        $this->callInaccessibleMethodWithArgs($this->client, 'setDefaultAccessibility', [Hooks::PROTECTED_ACCESSIBLE]);
+        $this->callInaccessibleMethodWithArgs(
+            $this->client,
+            'setDefaultAccessibility',
+            [Constants::PROTECTED_ACCESSIBLE]
+        );
 
         $this->assertTrue($this->callInaccessibleMethodWithArgs($this->client, 'methodNotRestricted', ['_getText']));
         $this->assertFalse($this->callInaccessibleMethodWithArgs($this->client, 'methodNotRestricted', ['getText']));
@@ -505,7 +519,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $this->callInaccessibleMethodWithArgs(
             $this->client,
             'setDefaultAccessibility',
-            [Hooks::PUBLIC_ACCESSIBLE | Hooks::PROTECTED_ACCESSIBLE]
+            [Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE]
         );
 
         $this->assertTrue($this->callInaccessibleMethodWithArgs($this->client, 'methodNotRestricted', ['getText']));
@@ -517,7 +531,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $this->callInaccessibleMethodWithArgs(
             $this->client,
             'setDefaultAccessibility',
-            [Hooks::PUBLIC_ACCESSIBLE | Hooks::PROTECTED_ACCESSIBLE | Hooks::PRIVATE_ACCESSIBLE]
+            [Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE | Constants::PRIVATE_ACCESSIBLE]
         );
 
         $this->assertTrue($this->callInaccessibleMethodWithArgs($this->client, 'methodNotRestricted', ['getText']));
@@ -529,7 +543,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \BadMethodCallException
-     * @expectedExceptionMessage _getText method called from after_getText is restricted by hooky options
+     * @expectedExceptionMessage _getText method called from after_getTextHook is restricted by hooky options
      */
     public function testSetHookableMethods()
     {
@@ -537,30 +551,30 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
 
         $that = $this;
 
-        $this->client->afterGetText(function ($instance, $resourceLocation) use ($that) {
+        $this->client->afterGetTextHook(function ($instance, $resourceLocation) use ($that) {
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
             $that->assertEquals('/path/to/resource', $resourceLocation);
         });
 
         $this->client->getText('/path/to/resource');
 
-        $this->client->after_getText(function ($instance, $resourceLocation, &$return) use ($that) {
+        $this->client->after_getTextHook(function ($instance, $resourceLocation, &$return) use ($that) {
             $that->fail("This shouldn't have been called");
         });
     }
 
     /**
      * @expectedException \BadMethodCallException
-     * @expectedExceptionMessage _getText method called from before_getText is restricted by hooky options
+     * @expectedExceptionMessage _getText method called from before_getTextHook is restricted by hooky options
      */
     public function testDefaultAccessibilityAndCallProtectedMethod()
     {
         $that = $this;
 
-        $this->client->beforeGetText(function () use ($that) {
+        $this->client->beforeGetTextHook(function ($instance, $resourceLocation) use ($that) {
         });
 
-        $this->client->before_getText(function () use ($that) {
+        $this->client->before_getTextHook(function ($instance, $resourceLocation) use ($that) {
             $that->fail("This shouldn't be accessible");
         });
 
@@ -569,16 +583,16 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \BadMethodCallException
-     * @expectedExceptionMessage privateMethod method called from beforePrivateMethod is restricted by hooky options
+     * @expectedExceptionMessage privateMethod method called from beforePrivateMethodHook is restricted by hooky options
      */
     public function testDefaultAccessibilityAndCallPrivateMethod()
     {
         $that = $this;
 
-        $this->client->beforeGetText(function () use ($that) {
+        $this->client->beforeGetTextHook(function ($instance, $resourceLocation) use ($that) {
         });
 
-        $this->client->beforePrivateMethod(function () use ($that) {
+        $this->client->beforePrivateMethodHook(function () use ($that) {
             $that->fail("This shouldn't be accessible");
         });
 
@@ -591,7 +605,7 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
      */
     public function testNonexistantMethodsThrowsException()
     {
-        $this->client->beforeNonexistantMethod(function ($instance, $resourceLocation) {
+        $this->client->beforeNonexistantMethodHook(function ($instance, $resourceLocation) {
         });
 
         $this->client->getText('/path/to/resource');
@@ -616,7 +630,6 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
 
         Client::beforeConstructorHook(function ($instance, $parameterOne, $parameterTwo) use (&$beforeCount) {
             ++$beforeCount;
-            $args = func_get_args();
         });
 
         Client::afterConstructorHook(function ($instance) use (&$afterCount) {
@@ -634,11 +647,11 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
         $beforeCount = 0;
         $afterCount = 0;
 
-        $this->client->before__destruct(function ($instance) use (&$beforeCount) {
+        $this->client->before__destructHook(function ($instance) use (&$beforeCount) {
             ++$beforeCount;
         });
 
-        $this->client->after__destruct(function ($instance) use (&$afterCount) {
+        $this->client->after__destructHook(function ($instance) use (&$afterCount) {
             ++$afterCount;
         });
 
@@ -652,13 +665,15 @@ class HooksTraitTest extends \PHPUnit_Framework_TestCase {
     {
         $client = new Client();
 
-        $this->assertEquals('/path/to/resource' ,$this->client->getText('/path/to/resource'));
+        $this->assertEquals('/path/to/resource', $client->getText('/path/to/resource'));
     }
 
     /**
      * @param object $object
      * @param string $method
      * @param array $args
+     *
+     * @return mixed
      */
     protected function callInaccessibleMethodWithArgs($object, $method, array $args)
     {
