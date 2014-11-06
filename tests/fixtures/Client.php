@@ -2,7 +2,7 @@
 namespace _2UpMedia\Hooky\Fixtures;
 
 class Client {
-    use \_2UpMedia\Hooky\HooksTrait;
+    use \_2UpMedia\Hooky\HooksTrait { __destruct as mainDestruct; }
 
     public function __construct($parameterOne = 'one', $parameterTwo = 'two')
     {
@@ -14,40 +14,40 @@ class Client {
 
     public function getText($resourceLocation)
     {
-        if (($return = $this->callBeforeHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
-            return $return;
+        if (($hookReturn = $this->callBeforeHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $hookReturn;
         }
 
-        $coreReturn = $this->_getText($resourceLocation);
+        $return = $this->_getText($resourceLocation);
 
-        if (($return = $this->callAfterHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
-            return $return;
+        if (($hookReturn = $this->callAfterHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $this->hookReturn($hookReturn); // allowing the return of nulls is optional
         }
 
-        return $coreReturn;
+        return $return;
     }
 
     protected function _getText($resourceLocation)
     {
-        if (($return = $this->callOnceBefore_getTextHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
-            return $return;
+        if (($hookReturn = $this->callOnceBeforeHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $hookReturn;
         }
 
-        if (($return = $this->callBefore_getTextHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
-            return $return;
+        if (($hookReturn = $this->callBeforeMethodHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $hookReturn;
         }
 
-        $coreReturn = $resourceLocation;
+        $return = $resourceLocation;
 
-        if (($return = $this->callAfter_getTextHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
-            return $return;
+        if (($hookReturn = $this->callAfterMethodHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $hookReturn;
         }
 
-        if (($return = $this->callOnceAfter_getTextHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
-            return $return;
+        if (($hookReturn = $this->callOnceAfterMethodHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+            return $hookReturn;
         }
 
-        return $coreReturn;
+        return $return;
     }
 
     private function privateMethod()
@@ -62,8 +62,9 @@ class Client {
 
     public function __destruct()
     {
-        $this->callBefore__destructHooks($this, __METHOD__);
-        $this->callAfter__destructHooks($this, __METHOD__);
+        $this->mainDestruct();
+
+        $this->callBeforeMethodHooks($this, __METHOD__);
+        $this->callAfterMethodHooks($this, __METHOD__);
     }
 }
- 

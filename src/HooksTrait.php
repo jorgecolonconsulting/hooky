@@ -3,31 +3,49 @@ namespace _2UpMedia\Hooky;
 
 trait HooksTrait
 {
-    /**
-     * [
-     *      'before' => [],
-     *      'after' => [],
-     *      'once' => [
-     *          'before' => [],
-     *          'after' => []
-     *      ]
-     * ]
-     *
-     * @var array
-     */
-    protected $hooks = [];
+    private $hooks = [
+        'beforeAll' => [],
+        'afterAll' => [],
+        'once' => [
+           'beforeAll' => [],
+           'afterAll' => []
+        ]
+    ];
 
-    protected static $staticHooks = [];
+    private static $staticHooks = [
+        'instance' => [],
+        'global' => [
+            'beforeAll' => [],
+            'afterAll' => [],
+            'once' => [
+                'beforeAll' => [],
+                'afterAll' => []
+            ]
+        ],
+    ];
 
     /**
-     * @var bool
+     * @var array read-only. DO NOT write to this property.
      */
-    protected $onceBeforeCalled = false;
+    private static $staticHooksDefault = [
+        'instance' => [],
+        'global' => [
+            'beforeAll' => [],
+            'afterAll' => [],
+            'once' => [
+                'beforeAll' => [],
+                'afterAll' => []
+            ]
+        ],
+    ];
 
-    /**
-     * @var bool
-     */
-    protected $onceAfterCalled = false;
+    private $onceBeforeCalled = false;
+
+    private $onceAfterCalled = false;
+
+    private $staticOnceAfterCalled = false;
+
+    private $staticOnceBeforeCalled = false;
 
     /**
      * [
@@ -39,30 +57,73 @@ trait HooksTrait
      *      ]
      * ]
      */
-    protected $onceCalledMethods = [];
+    private $onceCalledMethods = [];
+
+    private $staticOnceCalledMethods = [];
 
     /**
-     * @var int based on ReflectionMethod::IS_* constants
+     * @var int based on Constants::* constants. Public interface and abstract method accessibility is default.
      */
-    protected $defaultAccessibility = 256;
+    private static $defaultAccessibility = 264;
 
-    protected $hookableMethods = [];
+    private static $hookableMethods = [];
 
     private $hooksNotRestricted = [];
+
+    private static $staticHooksNotRestricted = [];
 
     public static $debugMode = false;
 
     /**
+     * Set bitewise options as such
+     *
+     * <code>
+     *  // allows hooking to public and protected methods
+     *  $this->setDefaultAccessibility(Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE);
+     * </code>
+     *
      * @param $options Constants
      */
     protected function setDefaultAccessibility($options)
     {
-        $this->defaultAccessibility = $options;
+        self::$defaultAccessibility = $options;
     }
 
     protected function setHookableMethods(array $methods)
     {
-        $this->hookableMethods = $methods;
+        self::$hookableMethods = $methods;
+    }
+
+    /**
+     * @param callable $callable
+     */
+    public static function globalAfterAllHook(callable $callable)
+    {
+        self::$staticHooks['global']['afterAll'][] = $callable;
+    }
+
+    /**
+     * @param callable $callable
+     */
+    public static function globalBeforeAllHook(callable $callable)
+    {
+        self::$staticHooks['global']['beforeAll'][] = $callable;
+    }
+
+    /**
+     * @param callable $callable
+     */
+    public static function globalOnceAfterAllHook(callable $callable)
+    {
+        self::$staticHooks['global']['once']['afterAll'][] = $callable;
+    }
+
+    /**
+     * @param callable $callable
+     */
+    public static function globalOnceBeforeAllHook(callable $callable)
+    {
+        self::$staticHooks['global']['once']['beforeAll'][] = $callable;
     }
 
     /**
@@ -72,7 +133,7 @@ trait HooksTrait
      */
     public function beforeAllHook(callable $callable)
     {
-        $this->hooks['before'][] = $callable;
+        $this->hooks['beforeAll'][] = $callable;
     }
 
     /**
@@ -82,7 +143,7 @@ trait HooksTrait
      */
     public function afterAllHook(callable $callable)
     {
-        $this->hooks['after'][] = $callable;
+        $this->hooks['afterAll'][] = $callable;
     }
 
     /**
@@ -94,22 +155,37 @@ trait HooksTrait
      */
     public function onceBeforeAllHook(callable $callable)
     {
-        $this->hooks['once']['before'][] = $callable;
+        $this->hooks['once']['beforeAll'][] = $callable;
     }
 
+    /**
+     * TODO: See if there's a ingenuous way to associate a constructor hook to one instantiated class
+     *
+     * @param callable $callable
+     */
     public static function beforeConstructorHook(callable $callable)
     {
-        self::$staticHooks['before'][] = $callable;
+        self::$staticHooks['instance']['beforeConstructor'][] = $callable;
     }
 
     public static function afterConstructorHook(callable $callable)
     {
-        self::$staticHooks['after'][] = $callable;
+        self::$staticHooks['instance']['afterConstructor'][] = $callable;
     }
 
-    public static function resetStaticHooks()
+    public static function resetStaticConstructorHooks()
     {
-        self::$staticHooks = [];
+        self::$staticHooks['instance'] = [];
+    }
+
+    public static function resetHookableMethods()
+    {
+        self::$hookableMethods = [];
+    }
+
+    public static function resetGlobalMethods()
+    {
+        self::$staticHooks['global'] = self::$staticHooksDefault['global'];
     }
 
     /**
@@ -121,10 +197,12 @@ trait HooksTrait
      */
     public function onceAfterAllHook(callable $callable)
     {
-        $this->hooks['once']['after'][] = $callable;
+        $this->hooks['once']['afterAll'][] = $callable;
     }
 
     /**
+     * Registers and calls dynamic method hooks
+     *
      * @param $method
      * @param $arguments
      *
@@ -142,73 +220,69 @@ trait HooksTrait
      */
     public function __call($method, $arguments)
     {
-        $callableRegistrationTokens = [
-            '^(after)(.*)(Hook)', '^(before)(.*)(Hook)', '^(onceAfter)(.*)(Hook)', '^(onceBefore)(.*)(Hook)'
-        ];
-
-        $callableInvokeTokens = [
-            '^(call)(After.*)', '^(call)(Before.*)'
-        ];
-
-        $callableInvokeOnceTokens = [
-            '^(call)(OnceAfter.*)', '^(call)(OnceBefore.*)'
-        ];
-
         $callable = $arguments[0];
-        if (isset($this->hooksNotRestricted[$method])) {
-            $this->hooks[$this->hooksNotRestricted[$method]][] = $callable;
 
+        if ($this->registerMethodHook($method, $callable)) {
             return;
-        } elseif (($matches = $this->matchesAny($callableRegistrationTokens, $method))!= false) {
-            if (! empty($matches[2])) {
-                $this->methodExists($matches[2]);
-            }
-
-            $targetMethod = lcfirst($matches[2]);
-
-            $this->methodNotRestricted($targetMethod, $method);
-
-            $hookName = $matches[1].$matches[2];
-
-            $this->hooksNotRestricted[$method] = $hookName;
-
-            $this->checkClosure($this, $callable, $targetMethod);
-
-            $this->hooks[$hookName][] = $callable;
-
-            return;
-        } elseif (strpos($method, 'call') === false) {
-            throw new \BadMethodCallException("There's a typo in $method. Can't properly set up hook.");
         }
 
         $extraArgs = [];
         $return = null;
+
         if (isset($arguments[2])) {
             $extraArgs = array_slice($arguments, 2);
         }
 
-        if (($matches = $this->matchesAny($callableInvokeTokens, $method)) != false) {
-            if (strpos($method, 'callAfter') !== false) {
-                $return = $this->callAfterMethodHooks($callable, $arguments[1], $extraArgs);
-            }
-
-            if (strpos($method, 'callBefore') !== false) {
-                $return = $this->callBeforeMethodHooks($callable, $arguments[1], $extraArgs);
-            }
-        }
-
-        if (($matches = $this->matchesAny($callableInvokeOnceTokens, $method)) != false) {
-            if (strpos($method, 'callOnceAfter') !== false) {
-                $return = $this->callOnceAfterMethodHooks($callable, $arguments[1], $extraArgs);
-            }
-
-            if (strpos($method, 'callOnceBefore') !== false) {
-                $return = $this->callOnceBeforeMethodHooks($callable, $arguments[1], $extraArgs);
-            }
-        }
-
-        if ($return !== null) {
+        if (($return = $this->callMethodHooks($method, $arguments, $callable, $extraArgs)) !== null) {
             return $return;
+        }
+
+        if (($return = $this->callMethodOnceHooks($method, $arguments, $callable, $extraArgs)) !== null) {
+            return $return;
+        }
+    }
+
+    public static function __callStatic($method, $arguments)
+    {
+        $callable = $arguments[0];
+
+        self::registerGlobalMethodHook($method, $callable);
+    }
+
+    private static function registerGlobalMethodHook($method, $callable)
+    {
+//        return;
+        $callableRegistrationTokens = [
+            '^global(After)(.*)(Hook)',
+            '^global(Before)(.*)(Hook)',
+            '^global(OnceAfter)(.*)(Hook)',
+            '^global(OnceBefore)(.*)(Hook)'
+        ];
+
+        if (isset(self::$staticHooksNotRestricted[$method])) {
+            self::$staticHooks['global'][self::$staticHooksNotRestricted[$method]][] = $callable;
+
+            return true;
+        } elseif (($matches = self::matchesAny($callableRegistrationTokens, $method)) != false) {
+            if ( ! empty($matches[2])) {
+                self::methodExists($matches[2]);
+            }
+
+            $targetMethod = lcfirst($matches[2]);
+
+            self::methodNotRestricted($targetMethod, $method);
+
+            $hookName = lcfirst($matches[1].$matches[2]);
+
+            self::$staticHooksNotRestricted[$method] = $hookName;
+
+            self::checkClosure(get_called_class(), $callable, $targetMethod);
+
+            self::$staticHooks['global'][$hookName][] = $callable;
+
+            return true;
+        } elseif (strpos($method, 'call') === false) {
+            throw new \BadMethodCallException("There's a typo in $method. Can't properly set up hook.");
         }
     }
 
@@ -316,35 +390,31 @@ trait HooksTrait
 
     protected function callBeforeConstructorHooks($classInstance, array $args = [])
     {
-        if (isset(self::$staticHooks['before'])) {
-            foreach (self::$staticHooks['before'] as $callable) {
+        if (isset(self::$staticHooks['instance']['beforeConstructor'])) {
+            foreach (self::$staticHooks['instance']['beforeConstructor'] as $callable) {
                 try {
-                    $return = $this->callCallable($classInstance, $callable, $args, null, false);
+                    $this->callCallable($classInstance, $callable, $args, null, false);
                 } catch (CancelPropagationException $e) {
                     break;
                 }
-
-                if ($return !== null) {
-                    return $return;
-                }
             }
+
+            unset(self::$staticHooks['instance']['beforeConstructor']);
         }
     }
 
     protected function callAfterConstructorHooks($classInstance, array $args = [])
     {
-        if (isset(self::$staticHooks['after'])) {
-            foreach (self::$staticHooks['after'] as $callable) {
+        if (isset(self::$staticHooks['instance']['afterConstructor'])) {
+            foreach (self::$staticHooks['instance']['afterConstructor'] as $callable) {
                 try {
-                    $return = $this->callCallable($classInstance, $callable, $args, null, false);
+                    $this->callCallable($classInstance, $callable, $args, null, false);
                 } catch (CancelPropagationException $e) {
                     break;
                 }
-
-                if ($return !== null) {
-                    return $return;
-                }
             }
+
+            unset(self::$staticHooks['instance']['afterConstructor']);
         }
     }
 
@@ -355,14 +425,21 @@ trait HooksTrait
      *
      * @return mixed
      */
-    protected function callBeforeMethodHooks($classInstance, $method, array $args)
+    protected function callBeforeMethodHooks($classInstance, $method, array $args = [])
     {
-        $method = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
         $beforeMethodCallableName = 'before'.ucfirst($method);
 
-        if (isset($this->hooks[$beforeMethodCallableName])) {
-            foreach ($this->hooks[$beforeMethodCallableName] as $callable) {
+        $hooks = isset($this->hooks[$beforeMethodCallableName]) ? $this->hooks[$beforeMethodCallableName] : [];
+
+        $staticHooks = isset(self::$staticHooks['global'][$beforeMethodCallableName]) ?
+            self::$staticHooks['global'][$beforeMethodCallableName] : [];
+
+        $hooks = array_merge($hooks, $staticHooks);
+
+        if ( ! empty($hooks)) {
+            foreach ($hooks as $callable) {
                 try {
                     $return = $this->callCallable($classInstance, $callable, $args, $method, false);
                 } catch (CancelPropagationException $e) {
@@ -383,14 +460,21 @@ trait HooksTrait
      *
      * @return mixed
      */
-    protected function callAfterMethodHooks($classInstance, $method, array $args)
+    protected function callAfterMethodHooks($classInstance, $method, array $args = [])
     {
-        $method = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
         $afterMethodCallableName = 'after'.ucfirst($method);
 
-        if (isset($this->hooks[$afterMethodCallableName])) {
-            foreach ($this->hooks[$afterMethodCallableName] as $callable) {
+        $hooks = isset($this->hooks[$afterMethodCallableName]) ? $this->hooks[$afterMethodCallableName] : [];
+
+        $staticHooks = isset(self::$staticHooks['global'][$afterMethodCallableName]) ?
+            self::$staticHooks['global'][$afterMethodCallableName] : [];
+
+        $hooks = array_merge($hooks, $staticHooks);
+
+        if ( ! empty($hooks)) {
+            foreach ($hooks as $callable) {
                 try {
                     $return = $this->callCallable($classInstance, $callable, $args, $method, false);
                 } catch (CancelPropagationException $e) {
@@ -411,9 +495,9 @@ trait HooksTrait
      *
      * @return mixed
      */
-    protected function callOnceBeforeMethodHooks($classInstance, $method, array $args)
+    protected function callOnceBeforeMethodHooks($classInstance, $method, array $args = [])
     {
-        $method = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
         $onceBeforeMethodName = 'onceBefore'.ucfirst($method);
         if (! isset($this->onceCalledMethods['before'][$onceBeforeMethodName])) {
@@ -433,6 +517,22 @@ trait HooksTrait
                 $this->onceCalledMethods['before'][$onceBeforeMethodName] = true;
             }
         }
+
+        $staticKey = 'onceBefore'.ucfirst($method);
+
+        $staticHooks = isset(self::$staticHooks['global'][$staticKey]) ? self::$staticHooks['global'][$staticKey] : [];
+
+        if ( ! isset($this->staticOnceCalledMethods['before'][$onceBeforeMethodName]) && $staticHooks) {
+            if ( ! empty($staticHooks)) {
+                $return = $this->callAllHookCallables($classInstance, $method, $staticHooks);
+
+                $this->staticOnceCalledMethods['before'][$onceBeforeMethodName] = true;
+
+                if ($return !== null) {
+                    return $return;
+                }
+            }
+        }
     }
 
     /**
@@ -442,13 +542,15 @@ trait HooksTrait
      *
      * @return mixed
      */
-    protected function callOnceAfterMethodHooks($classInstance, $method, array $args)
+    protected function callOnceAfterMethodHooks($classInstance, $method, array $args = [])
     {
-        $method = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
         $onceAfterMethodName = 'onceAfter'.ucfirst($method);
-        if (! isset($this->onceCalledMethods['after'][$onceAfterMethodName])) {
+        if ( ! isset($this->onceCalledMethods['after'][$onceAfterMethodName])) {
             if (isset($this->hooks[$onceAfterMethodName])) {
+                $this->onceCalledMethods['after'][$onceAfterMethodName] = true;
+
                 foreach ($this->hooks[$onceAfterMethodName] as $callable) {
                     try {
                         $return = $this->callCallable($classInstance, $callable, $args, $method, false);
@@ -460,8 +562,22 @@ trait HooksTrait
                         return $return;
                     }
                 }
+            }
+        }
 
-                $this->onceCalledMethods['after'][$onceAfterMethodName] = true;
+        $staticKey = 'onceAfter'.ucfirst($method);
+
+        $staticHooks = isset(self::$staticHooks['global'][$staticKey]) ? self::$staticHooks['global'][$staticKey] : [];
+
+        if ( ! isset($this->staticOnceCalledMethods['after'][$onceAfterMethodName]) && $staticHooks) {
+            if ( ! empty($staticHooks)) {
+                $return = $this->callAllHookCallables($classInstance, $method, $staticHooks);
+
+                $this->staticOnceCalledMethods['after'][$onceAfterMethodName] = true;
+
+                if ($return !== null) {
+                    return $return;
+                }
             }
         }
     }
@@ -474,23 +590,34 @@ trait HooksTrait
      */
     protected function callOnceBeforeAllHooks($classInstance, $method)
     {
-        $method = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
-        if (! $this->onceBeforeCalled) {
-            if (isset($this->hooks['once']['before'])) {
-                foreach ($this->hooks['once']['before'] as $callable) {
-                    try {
-                        $return = $this->callCallable($classInstance, $callable, [], $method);
-                    } catch (CancelPropagationException $e) {
-                        break;
-                    }
+        $hooks = $this->hooks['once']['beforeAll'];
 
-                    if ($return !== null) {
-                        return $return;
-                    }
-                }
+        if (! $this->onceBeforeCalled && $hooks) {
+
+            if ( ! empty($hooks)) {
+                $return = $this->callAllHookCallables($classInstance, $method, $hooks);
 
                 $this->onceBeforeCalled = true;
+
+                if ($return !== null) {
+                    return $return;
+                }
+            }
+        }
+
+        $staticHooks = self::$staticHooks['global']['once']['beforeAll'];
+
+        if ( ! $this->staticOnceBeforeCalled && $staticHooks) {
+            if ( ! empty($staticHooks)) {
+                $return = $this->callAllHookCallables($classInstance, $method, $staticHooks);
+
+                $this->staticOnceBeforeCalled = true;
+
+                if ($return !== null) {
+                    return $return;
+                }
             }
         }
     }
@@ -503,23 +630,34 @@ trait HooksTrait
      */
     protected function callOnceAfterAllHooks($classInstance, $method)
     {
-        $method = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
-        if (! $this->onceAfterCalled) {
-            if (isset($this->hooks['once']['after'])) {
-                foreach ($this->hooks['once']['after'] as $callable) {
-                    try {
-                        $return = $this->callCallable($classInstance, $callable, [], $method);
-                    } catch (CancelPropagationException $e) {
-                        break;
-                    }
+        $hooks = $this->hooks['once']['afterAll'];
 
-                    if ($return !== null) {
-                        return $return;
-                    }
-                }
+        if ( ! $this->onceAfterCalled && $hooks) {
+
+            if ( ! empty($hooks)) {
+                $return = $this->callAllHookCallables($classInstance, $method, $hooks);
 
                 $this->onceAfterCalled = true;
+
+                if ($return !== null) {
+                    return $return;
+                }
+            }
+        }
+
+        $staticHooks = self::$staticHooks['global']['once']['afterAll'];
+
+        if ( ! $this->staticOnceAfterCalled && $staticHooks) {
+            if ( ! empty($staticHooks)) {
+                $return = $this->callAllHookCallables($classInstance, $method, $staticHooks);
+
+                $this->staticOnceAfterCalled = true;
+
+                if ($return !== null) {
+                    return $return;
+                }
             }
         }
     }
@@ -533,19 +671,15 @@ trait HooksTrait
     protected function callBeforeAllHooks($classInstance, $method)
     {
         // check $classInstance is the valid type of the class using the trait
-        $method = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
-        if (isset($this->hooks['before'])) {
-            foreach ($this->hooks['before'] as $callable) {
-                try {
-                    $return = $this->callCallable($classInstance, $callable, [], $method);
-                } catch (CancelPropagationException $e) {
-                    break;
-                }
+        $hooks = array_merge($this->hooks['beforeAll'], self::$staticHooks['global']['beforeAll']);
 
-                if ($return !== null) {
-                    return $return;
-                }
+        if ( ! empty($hooks)) {
+            $return = $this->callAllHookCallables($classInstance, $method, $hooks);
+
+            if ($return !== null) {
+                return $return;
             }
         }
     }
@@ -558,20 +692,121 @@ trait HooksTrait
     protected function callAfterAllHooks($classInstance, $method)
     {
         // check $classInstance is the valid type of the class using the trait
-        $calledMethod = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
-        if (isset($this->hooks['after'])) {
-            foreach ($this->hooks['after'] as $callable) {
-                try {
-                    $return = $this->callCallable($classInstance, $callable, [], $calledMethod);
-                } catch (CancelPropagationException $e) {
-                    break;
-                }
+        $hooks = array_merge($this->hooks['afterAll'], self::$staticHooks['global']['afterAll']);
 
-                if ($return !== null) {
-                    return $return;
-                }
+        if ( ! empty($hooks)) {
+            $return = $this->callAllHookCallables($classInstance, $method, $hooks);
+
+            if ($return !== null) {
+                return $return;
             }
+        }
+    }
+
+    /**
+     * @param $method
+     * @param $callable
+     *
+     * @return bool
+     * @throws \BadMethodCallException
+     *
+     */
+    private function registerMethodHook($method, $callable)
+    {
+        $callableRegistrationTokens = [
+            '^(after)(.*)(Hook)',
+            '^(before)(.*)(Hook)',
+            '^(onceAfter)(.*)(Hook)',
+            '^(onceBefore)(.*)(Hook)'
+        ];
+
+        if (isset($this->hooksNotRestricted[$method])) {
+            $this->hooks[$this->hooksNotRestricted[$method]][] = $callable;
+
+            return true;
+        } elseif (($matches = self::matchesAny($callableRegistrationTokens, $method)) != false) {
+            if ( ! empty($matches[2])) {
+                self::methodExists($matches[2]);
+            }
+
+            $targetMethod = lcfirst($matches[2]);
+
+            self::methodNotRestricted($targetMethod, $method);
+
+            $hookName = $matches[1].$matches[2];
+
+            $this->hooksNotRestricted[$method] = $hookName;
+
+            self::checkClosure($this, $callable, $targetMethod);
+
+            $this->hooks[$hookName][] = $callable;
+
+            return true;
+        } elseif (strpos($method, 'call') === false) {
+            throw new \BadMethodCallException("There's a typo in $method. Can't properly set up hook.");
+        }
+    }
+
+    /**
+     * @param $method
+     * @param $arguments
+     * @param $callable
+     * @param $extraArgs
+     * @return mixed
+     */
+    private function callMethodHooks($method, $arguments, $callable, $extraArgs)
+    {
+        $return = null;
+        $callableInvokeTokens = [
+            '^(call)(After.*)',
+            '^(call)(Before.*)'
+        ];
+
+        if ((self::matchesAny($callableInvokeTokens, $method)) != false) {
+            if (strpos($method, 'callAfter') !== false) {
+                $return = $this->callAfterMethodHooks($callable, $arguments[1], $extraArgs);
+            }
+
+            if (strpos($method, 'callBefore') !== false) {
+                $return = $this->callBeforeMethodHooks($callable, $arguments[1], $extraArgs);
+            }
+        }
+
+        if ($return !== null) {
+            return $return;
+        }
+    }
+
+    /**
+     * @param $method
+     * @param $arguments
+     * @param $callable
+     * @param $extraArgs
+     * @return mixed
+     */
+    private function callMethodOnceHooks($method, $arguments, $callable, $extraArgs)
+    {
+        $return = null;
+
+        $callableInvokeOnceTokens = [
+            '^(call)(OnceAfter.*)',
+            '^(call)(OnceBefore.*)'
+        ];
+
+        if ((self::matchesAny($callableInvokeOnceTokens, $method)) != false) {
+            if (strpos($method, 'callOnceAfter') !== false) {
+                $return = $this->callOnceAfterMethodHooks($callable, $arguments[1], $extraArgs);
+            }
+
+            if (strpos($method, 'callOnceBefore') !== false) {
+                $return = $this->callOnceBeforeMethodHooks($callable, $arguments[1], $extraArgs);
+            }
+        }
+
+        if ($return !== null) {
+            return $return;
         }
     }
 
@@ -593,12 +828,18 @@ trait HooksTrait
         $method = null,
         $includeMethodParameter = true
     ) {
-        $preArguments = $method && $includeMethodParameter ? array($classInstance, $method) : array($classInstance);
+        if ($callable instanceof \Closure) {
+            $preArguments = $method && $includeMethodParameter ? [$method] : [];
+
+            $callable = $callable->bindTo($classInstance);
+        } else {
+            $preArguments = $method && $includeMethodParameter ? [$classInstance, $method] : [$classInstance];
+        }
 
         return call_user_func_array($callable, array_merge($preArguments, $args));
     }
 
-    protected function checkClosure(
+    protected static function checkClosure(
         $classInstance,
         callable $callable,
         $method = null
@@ -636,7 +877,7 @@ trait HooksTrait
             $parameterOffset = 0;
 
             // remove default parameters
-            if ($method && $callableParameters) {
+            if ($method && $callableParameters && $callable instanceof \Closure === false) {
                 $callableParameters = array_slice($callableParameters, 1);
 
                 $parameterOffset = 1;
@@ -693,7 +934,7 @@ trait HooksTrait
 
                 $message = implode("\n", $errorBuffer);
 
-                trigger_error($message, E_USER_WARNING);
+                trigger_error($message, E_USER_NOTICE);
             }
         }
     }
@@ -704,7 +945,7 @@ trait HooksTrait
      *
      * @return int
      */
-    private function matchesAny(array $regexes, $subject)
+    private static function matchesAny(array $regexes, $subject)
     {
         $matches = null;
         foreach ($regexes as $regex) {
@@ -719,7 +960,7 @@ trait HooksTrait
      *
      * @return mixed
      */
-    private function getCalledMethod($method)
+    private static function getCalledMethod($method)
     {
         if (strpos($method, '::') !== false) {
             $methodChunks = explode('::', $method);
@@ -734,22 +975,20 @@ trait HooksTrait
      *
      * @return bool
      */
-    private function methodExists($methodName)
+    private static function methodExists($methodName)
     {
-        if (! method_exists($this, $methodName)) {
+        if (! method_exists(get_called_class(), $methodName)) {
             throw new \BadMethodCallException("$methodName doesn't exist");
         }
 
         return true;
     }
 
-    private function methodNotRestricted($method, $callingMethod = null)
+    private static function methodNotRestricted($method, $callingMethod = null)
     {
-        $method = $this->getCalledMethod($method);
+        $method = self::getCalledMethod($method);
 
-        $reflectionMethod = new \ReflectionMethod($this, $method);
-
-        $visibility = $reflectionMethod->getModifiers();
+        $methodVisibility = self::getModifiers(get_called_class(), $method);
 
         if ($callingMethod) {
             $message = "$method method called from $callingMethod is restricted by hooky options";
@@ -757,16 +996,122 @@ trait HooksTrait
             $message = "$method method is restricted by hooky options";
         }
 
-        if ($this->hookableMethods && ! in_array($method, $this->hookableMethods)) {
+        if (self::$hookableMethods && ! in_array($method, self::$hookableMethods)) {
             throw new \BadMethodCallException($message);
         }
 
         // check if this is an interface method
+        if (($methodVisibility & Constants::ABSTRACT_ACCESSIBLE)
+            && ($abstractBitExcluded = $methodVisibility ^ Constants::ABSTRACT_ACCESSIBLE)
+            && $abstractBitExcluded & self::$defaultAccessibility) {
+            return true;
+        } elseif ((self::$defaultAccessibility & Constants::ABSTRACT_ACCESSIBLE)) {
+            $message = "$method method called from $callingMethod is restricted by hooky options. Must be implemented "
+                ."from an interface or abstract method.";
 
-        if ($visibility & $this->defaultAccessibility) {
+            throw new \BadMethodCallException($message);
+        }
+
+        if ($methodVisibility & self::$defaultAccessibility) {
             return true;
         }
 
         throw new \BadMethodCallException($message);
+    }
+
+    /**
+     * @param $class
+     * @param $method
+     *
+     * @return int
+     */
+    private static function getModifiers($class, $method)
+    {
+        $reflectionClass = new \ReflectionClass($class);
+        /**
+         * @var \ReflectionClass $reflectionInterfaces
+         */
+        $reflectionInterfaces = $reflectionClass->getInterfaces();
+
+        $isInterfaceMethod = 0;
+        foreach ($reflectionInterfaces as $reflectionInterface) {
+            if ($reflectionInterface->hasMethod($method)) {
+                $isInterfaceMethod = 1;
+            }
+        }
+
+        $topMostClass = self::getTopMostClass($reflectionClass);
+
+        $isAbstractMethod = 0;
+        if ($topMostClass->isAbstract() && $topMostClass->hasMethod($method)) {
+            $isAbstractMethod = 2;
+        }
+
+        $reflectionMethod = new \ReflectionMethod($class, $method);
+        $visibility = $reflectionMethod->getModifiers();
+
+        if ($isAbstractMethod | $isInterfaceMethod) {
+            $visibility = $visibility | Constants::ABSTRACT_ACCESSIBLE;
+        }
+
+        return $visibility;
+    }
+
+    /**
+     * @param \ReflectionClass $class
+     *
+     * @return \ReflectionClass
+     */
+    private static function getTopMostClass(\ReflectionClass $class)
+    {
+        if ($parentClass = $class->getParentClass()) {
+            return self::getTopMostClass($parentClass);
+        }
+
+        return $class;
+    }
+
+    /**
+     * Special method that allows null values to be returned from callables
+     *
+     * @param mixed $return
+     * @return null|mixed
+     */
+    protected function hookReturn($return)
+    {
+        if ($return === Constants::NULL) {
+            return null;
+        }
+
+        return $return;
+    }
+
+    public function __destruct()
+    {
+        self::resetStaticConstructorHooks();
+    }
+
+    /**
+     * @param $classInstance
+     * @param $method
+     * @param $hooks
+     *
+     * @return mixed
+     */
+    protected function callAllHookCallables($classInstance, $method, $hooks)
+    {
+        $return = null;
+
+        foreach ($hooks as $callable) {
+            try {
+                $return = $this->callCallable($classInstance, $callable, [], $method);
+            } catch (CancelPropagationException $e) {
+                break;
+            }
+
+            if ($return !== null) {
+                return $return;
+            }
+        }
     }
 }
