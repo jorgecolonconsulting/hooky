@@ -24,6 +24,34 @@ class GenericTest extends BaseTestCase
         $this->markTestIncomplete();
     }
 
+    public function testRestrictHookAction()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testCapitalCasedMethod()
+    {
+        $this->setPublicAccessible();
+
+        $count = 0;
+        $this->client->beforeCapitalCasedMethodHook(function () use (&$count) {
+            ++$count;
+        });
+
+        $this->client->CapitalCasedMethod();
+        $this->assertEquals(1, $count);
+
+        $count = 0;
+        Client::globalBeforeCapitalCasedMethodHook(function () use (&$count) {
+            ++$count;
+        });
+
+        Client::resetGlobalMethods();
+
+        $this->client->CapitalCasedMethod();
+        $this->assertEquals(1, $count);
+    }
+
     /**
      * @expectedException \PHPUnit_Framework_Error_Notice
      * @expectedExceptionMessage Callable argument 2 'nonexistantParameter' does not exist in the original getText()
@@ -212,88 +240,168 @@ class GenericTest extends BaseTestCase
         $that = $this;
 
         $client = new Client();
-        $this->setPublicAndProtectedAccessibility($client);
 
-        $beforeMethodCount = 0;
-        $client->beforeGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
-            ++$beforeMethodCount;
+        $count = 0;
+        $client->beforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
 
             return true;
         });
 
-        $client->beforeGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
-            ++$beforeMethodCount;
+        $client->beforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
         });
 
-        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$count) {
             $that->fail("Wasn't supposed to get called");
         });
 
         $this->assertTrue($client->getText('/path/to/resource'));
-        $this->assertEquals(1, $beforeMethodCount);
+        $this->assertEquals(1, $count);
 
         $client = new Client();
-        $this->setPublicAndProtectedAccessibility($client);
 
-        $beforeAllCount = 0;
-        $client->beforeAllHook(function() use ($that, &$beforeAllCount) {
-            ++$beforeAllCount;
+        $count = 0;
+        $client->beforeAllHook(function() use ($that, &$count) {
+            ++$count;
 
             return true;
         });
 
-        $client->beforeAllHook(function() use ($that, &$beforeAllCount) {
-            ++$beforeAllCount;
+        $client->beforeAllHook(function() use ($that, &$count) {
+            ++$count;
         });
 
-        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$count) {
             $that->fail("Wasn't supposed to get called");
         });
 
         $this->assertTrue($client->getText('/path/to/resource'));
-        $this->assertEquals(1, $beforeAllCount);
+        $this->assertEquals(1, $count);
 
         $client = new Client();
-        $this->setPublicAndProtectedAccessibility($client);
 
-        $onceBeforeAllCount = 0;
-        $client->onceBeforeAllHook(function() use ($that, &$onceBeforeAllCount) {
-            ++$onceBeforeAllCount;
+        $count = 0;
+        $client->onceBeforeAllHook(function() use ($that, &$count) {
+            ++$count;
 
             return true;
         });
 
-        $client->onceBeforeAllHook(function() use ($that, &$onceBeforeAllCount) {
-            ++$onceBeforeAllCount;
+        $client->onceBeforeAllHook(function() use ($that, &$count) {
+            ++$count;
         });
 
-        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$count) {
             $that->fail("Wasn't supposed to get called");
         });
 
         $this->assertTrue($client->getText('/path/to/resource'));
-        $this->assertEquals(1, $onceBeforeAllCount);
+        $this->assertEquals(1, $count);
 
         $client = new Client();
-        $this->setPublicAndProtectedAccessibility($client);
 
-        $onceBeforeGetText = 0;
-        $client->onceBeforeGetTextHook(function($resourceLocation) use ($that, &$onceBeforeGetText) {
-            ++$onceBeforeGetText;
+        $count = 0;
+        $client->onceBeforeGetTextHook(function($resourceLocation) use ($that, &$count) {
+            ++$count;
 
             return true;
         });
 
-        $client->onceBeforeGetTextHook(function($resourceLocation) use ($that, &$onceBeforeGetText) {
-            ++$onceBeforeGetText;
+        $client->onceBeforeGetTextHook(function($resourceLocation) use ($that, &$count) {
+            ++$count;
         });
 
-        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$count) {
             $that->fail("Wasn't supposed to get called");
         });
 
         $this->assertTrue($client->getText('/path/to/resource'));
-        $this->assertEquals(1, $onceBeforeGetText);
+        $this->assertEquals(1, $count);
+
+        $client = new Client();
+
+        $count = 0;
+        Client::globalBeforeAllHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
+
+            return true;
+        });
+
+        Client::globalBeforeAllHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
+        });
+
+        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            $that->fail("Wasn't supposed to get called");
+        });
+
+        $this->assertTrue($client->getText('/path/to/resource'));
+        $this->assertEquals(1, $count);
+
+        Client::resetGlobalMethods();
+
+        $client = new Client();
+
+        $count = 0;
+        Client::globalOnceBeforeAllHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
+
+            return true;
+        });
+
+        Client::globalOnceBeforeAllHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
+        });
+
+        $this->assertTrue($client->getText('/path/to/resource'));
+        $this->assertEquals(1, $count);
+
+        Client::resetGlobalMethods();
+
+        $client = new Client();
+
+        $count = 0;
+        Client::globalBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
+
+            return true;
+        });
+
+        Client::globalBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
+        });
+
+        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            $that->fail("Wasn't supposed to get called");
+        });
+
+        $this->assertTrue($client->getText('/path/to/resource'));
+        $this->assertEquals(1, $count);
+
+        Client::resetGlobalMethods();
+
+        $client = new Client();
+
+        $count = 0;
+        Client::globalOnceBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
+
+            return true;
+        });
+
+        Client::globalOnceBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            ++$count;
+        });
+
+        $client->afterGetTextHook(function ($resourceLocation) use ($that, &$count) {
+            $that->fail("Wasn't supposed to get called");
+        });
+
+        $this->assertTrue($client->getText('/path/to/resource'));
+        $this->assertEquals(1, $count);
+
+        Client::resetGlobalMethods();
     }
 
     public function testAfterEarlyReturn()
@@ -384,6 +492,78 @@ class GenericTest extends BaseTestCase
 
         $this->assertTrue($client->getText('/path/to/resource'));
         $this->assertEquals(1, $onceAfterGetText);
+
+        $client = new Client();
+
+        $beforeMethodCount = 0;
+        Client::globalAfterAllHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+            ++$beforeMethodCount;
+
+            return true;
+        });
+
+        Client::globalAfterAllHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+            ++$beforeMethodCount;
+        });
+
+        $this->assertTrue($client->getText('/path/to/resource'));
+        $this->assertEquals(1, $beforeMethodCount);
+
+        Client::resetGlobalMethods();
+
+        $client = new Client();
+
+        $beforeMethodCount = 0;
+        Client::globalOnceAfterAllHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+            ++$beforeMethodCount;
+
+            return true;
+        });
+
+        Client::globalOnceAfterAllHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+            ++$beforeMethodCount;
+        });
+
+        $this->assertTrue($client->getText('/path/to/resource'));
+        $this->assertEquals(1, $beforeMethodCount);
+
+        Client::resetGlobalMethods();
+
+        $client = new Client();
+
+        $beforeMethodCount = 0;
+        Client::globalAfterGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+            ++$beforeMethodCount;
+
+            return true;
+        });
+
+        Client::globalAfterGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+            ++$beforeMethodCount;
+        });
+
+        $this->assertTrue($client->getText('/path/to/resource'));
+        $this->assertEquals(1, $beforeMethodCount);
+
+        Client::resetGlobalMethods();
+
+        $client = new Client();
+
+        $beforeMethodCount = 0;
+        Client::globalOnceAfterGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+            ++$beforeMethodCount;
+
+            return true;
+        });
+
+        Client::globalOnceAfterGetTextHook(function ($resourceLocation) use ($that, &$beforeMethodCount) {
+            ++$beforeMethodCount;
+        });
+
+        $this->assertTrue($client->getText('/path/to/resource'));
+        $this->assertEquals(1, $beforeMethodCount);
+
+        Client::resetGlobalMethods();
     }
 
     public function testEarlyReturnWithMethodHooks()

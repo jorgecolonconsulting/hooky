@@ -1,7 +1,8 @@
 <?php
 namespace _2UpMedia\Hooky\Fixtures;
 
-class Client {
+class Client
+{
     use \_2UpMedia\Hooky\HooksTrait { __destruct as mainDestruct; }
 
     public function __construct($parameterOne = 'one', $parameterTwo = 'two')
@@ -29,21 +30,21 @@ class Client {
 
     protected function _getText($resourceLocation)
     {
-        if (($hookReturn = $this->callOnceBeforeHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+        if (($hookReturn = $this->callOnceBeforeHooks($this, __METHOD__, [$resourceLocation])) !== null) {
             return $hookReturn;
         }
 
-        if (($hookReturn = $this->callBeforeMethodHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+        if (($hookReturn = $this->callBeforeMethodHooks($this, __METHOD__, [$resourceLocation])) !== null) {
             return $hookReturn;
         }
 
         $return = $resourceLocation;
 
-        if (($hookReturn = $this->callAfterMethodHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+        if (($hookReturn = $this->callAfterMethodHooks($this, __METHOD__, [$resourceLocation])) !== null) {
             return $hookReturn;
         }
 
-        if (($hookReturn = $this->callOnceAfterMethodHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+        if (($hookReturn = $this->callOnceAfterMethodHooks($this, __METHOD__, [$resourceLocation])) !== null) {
             return $hookReturn;
         }
 
@@ -53,6 +54,11 @@ class Client {
     private function privateMethod()
     {
         $this->callAfterHooks($this, __METHOD__);
+    }
+
+    public function CapitalCasedMethod()
+    {
+        $this->callBeforeHooks($this, __METHOD__);
     }
 
     public function publicMethod()

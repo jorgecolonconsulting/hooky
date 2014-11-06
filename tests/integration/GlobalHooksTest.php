@@ -190,18 +190,16 @@ class GlobalHooksTest extends BaseTestCase
 
         $count = 0;
 
-        Client::globalBeforeAllHook(function ($method) use ($that, &$count) {
+        Client::globalBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
-            $that->assertContains($method, ['getText', '_getText']);
         });
 
-        Client::globalBeforeAllHook(function ($method) use ($that, &$count) {
+        Client::globalBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
             $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
-            $that->assertContains($method, ['getText', '_getText']);
         });
 
         $resourceLocation = '/path/to/resource';

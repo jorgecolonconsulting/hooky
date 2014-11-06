@@ -220,38 +220,16 @@ trait HooksTrait
      */
     public function __call($method, $arguments)
     {
-        $callable = $arguments[0];
-
-        if ($this->registerMethodHook($method, $callable)) {
-            return;
-        }
-
-        $extraArgs = [];
-        $return = null;
-
-        if (isset($arguments[2])) {
-            $extraArgs = array_slice($arguments, 2);
-        }
-
-        if (($return = $this->callMethodHooks($method, $arguments, $callable, $extraArgs)) !== null) {
-            return $return;
-        }
-
-        if (($return = $this->callMethodOnceHooks($method, $arguments, $callable, $extraArgs)) !== null) {
-            return $return;
-        }
+        $this->registerMethodHook($method, $arguments[0]);
     }
 
     public static function __callStatic($method, $arguments)
     {
-        $callable = $arguments[0];
-
-        self::registerGlobalMethodHook($method, $callable);
+        self::registerGlobalMethodHook($method, $arguments[0]);
     }
 
     private static function registerGlobalMethodHook($method, $callable)
     {
-//        return;
         $callableRegistrationTokens = [
             '^global(After)(.*)(Hook)',
             '^global(Before)(.*)(Hook)',
@@ -746,67 +724,6 @@ trait HooksTrait
             return true;
         } elseif (strpos($method, 'call') === false) {
             throw new \BadMethodCallException("There's a typo in $method. Can't properly set up hook.");
-        }
-    }
-
-    /**
-     * @param $method
-     * @param $arguments
-     * @param $callable
-     * @param $extraArgs
-     * @return mixed
-     */
-    private function callMethodHooks($method, $arguments, $callable, $extraArgs)
-    {
-        $return = null;
-        $callableInvokeTokens = [
-            '^(call)(After.*)',
-            '^(call)(Before.*)'
-        ];
-
-        if ((self::matchesAny($callableInvokeTokens, $method)) != false) {
-            if (strpos($method, 'callAfter') !== false) {
-                $return = $this->callAfterMethodHooks($callable, $arguments[1], $extraArgs);
-            }
-
-            if (strpos($method, 'callBefore') !== false) {
-                $return = $this->callBeforeMethodHooks($callable, $arguments[1], $extraArgs);
-            }
-        }
-
-        if ($return !== null) {
-            return $return;
-        }
-    }
-
-    /**
-     * @param $method
-     * @param $arguments
-     * @param $callable
-     * @param $extraArgs
-     * @return mixed
-     */
-    private function callMethodOnceHooks($method, $arguments, $callable, $extraArgs)
-    {
-        $return = null;
-
-        $callableInvokeOnceTokens = [
-            '^(call)(OnceAfter.*)',
-            '^(call)(OnceBefore.*)'
-        ];
-
-        if ((self::matchesAny($callableInvokeOnceTokens, $method)) != false) {
-            if (strpos($method, 'callOnceAfter') !== false) {
-                $return = $this->callOnceAfterMethodHooks($callable, $arguments[1], $extraArgs);
-            }
-
-            if (strpos($method, 'callOnceBefore') !== false) {
-                $return = $this->callOnceBeforeMethodHooks($callable, $arguments[1], $extraArgs);
-            }
-        }
-
-        if ($return !== null) {
-            return $return;
         }
     }
 
