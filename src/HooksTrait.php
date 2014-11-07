@@ -75,6 +75,64 @@ trait HooksTrait
     public static $checkCallableParameters = false;
 
     /**
+     * @param $method
+     * @param $callableParameters
+     * @param $parameterDiff
+     * @param $parameterOffset
+     * @return array
+     */
+    private static function findParameterIssues($method, $callableParameters, $parameterDiff, $parameterOffset)
+    {
+        $errorBuffer = [];
+
+        $lastCallableParameterIndex = count($callableParameters) - 1;
+
+        // issue a warning error if the parameters are named differently
+        foreach ($parameterDiff as $key => $parameter) {
+            $originalPosition = $key + 1;
+            $callablePosition = $key + 1 + $parameterOffset;
+
+            $parameterNotInOriginal = $parameter['original'] === null && $parameter['callable'] !== null;
+            $isLastCallableParameter = ($lastCallableParameterIndex === $key);
+
+            if ($isLastCallableParameter && stripos($parameter['callable'], 'return') !== false) {
+                continue;
+            } elseif ($parameterNotInOriginal) {
+                $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' does not "
+                    ."exist in the original {$method}() method as argument {$originalPosition}";
+            } elseif ($parameter['original'] !== null && $parameter['callable'] === null) {
+                $errorBuffer[] = "Callable argument {$callablePosition} exists in the original {$method}() "
+                    ."method as argument {$originalPosition} but is omitted in the callable";
+            } elseif ($parameter['original'] !== $parameter['callable']) {
+                $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' is named "
+                    ."'{$parameter['original']}' in the original {$method}() method as argument "
+                    ."{$originalPosition}";
+            }
+        }
+
+        $message = implode("\n", $errorBuffer);
+
+        if ($message) {
+            trigger_error($message, E_USER_NOTICE);
+        }
+    }
+
+    /**
+     * @param  \ReflectionParameter[] $reflectionParameters
+     * @return array
+     */
+    private static function getReflectionParameters(array $reflectionParameters)
+    {
+        $buffer = [];
+
+        foreach ($reflectionParameters as $parameter) {
+            $buffer[] = $parameter->getName();
+        }
+
+        return $buffer;
+    }
+
+    /**
      * Set bitewise options as such
      *
      * <code>
@@ -493,20 +551,10 @@ trait HooksTrait
             }
         }
 
-        $staticKey = 'onceBefore'.ucfirst($method);
+        $return = $this->callGlobalOnceBeforeMethodHooks($classInstance, $method, $onceBeforeMethodName);
 
-        $staticHooks = isset(self::$staticHooks['global'][$staticKey]) ? self::$staticHooks['global'][$staticKey] : [];
-
-        if ( ! isset($this->globalOnceCalledMethods['before'][$onceBeforeMethodName]) && $staticHooks) {
-            if ( ! empty($staticHooks)) {
-                $return = $this->callAllHookCallables($classInstance, $method, $staticHooks);
-
-                $this->globalOnceCalledMethods['before'][$onceBeforeMethodName] = true;
-
-                if ($return !== null) {
-                    return $return;
-                }
-            }
+        if ($return !== null) {
+            return $return;
         }
     }
 
@@ -540,20 +588,10 @@ trait HooksTrait
             }
         }
 
-        $staticKey = 'onceAfter'.ucfirst($method);
+        $return = $this->callGlobalOnceAfterMethodHooks($classInstance, $method, $onceAfterMethodName);
 
-        $staticHooks = isset(self::$staticHooks['global'][$staticKey]) ? self::$staticHooks['global'][$staticKey] : [];
-
-        if ( ! isset($this->globalOnceCalledMethods['after'][$onceAfterMethodName]) && $staticHooks) {
-            if ( ! empty($staticHooks)) {
-                $return = $this->callAllHookCallables($classInstance, $method, $staticHooks);
-
-                $this->globalOnceCalledMethods['after'][$onceAfterMethodName] = true;
-
-                if ($return !== null) {
-                    return $return;
-                }
-            }
+        if ($return !== null) {
+            return $return;
         }
     }
 
@@ -684,6 +722,60 @@ trait HooksTrait
     /**
      * @param  object $classInstance
      * @param  string $method
+     * @param  string $onceAfterMethodName
+     * @return mixed
+     */
+    protected function callGlobalOnceAfterMethodHooks(
+        $classInstance,
+        $method,
+        $onceAfterMethodName
+    ) {
+        $staticKey = 'onceAfter'.ucfirst($method);
+
+        $staticHooks = isset(self::$staticHooks['global'][$staticKey]) ? self::$staticHooks['global'][$staticKey] : [];
+
+        if ( ! isset($this->globalOnceCalledMethods['after'][$onceAfterMethodName]) && $staticHooks) {
+            if ( ! empty($staticHooks)) {
+                $return = $this->callAllHookCallables($classInstance, $method, $staticHooks);
+
+                $this->globalOnceCalledMethods['after'][$onceAfterMethodName] = true;
+
+                if ($return !== null) {
+                    return $return;
+                }
+            }
+
+        }
+    }
+
+    /**
+     * @param  object $classInstance
+     * @param  string $method
+     * @param  string $onceBeforeMethodName
+     * @return mixed
+     */
+    protected function callGlobalOnceBeforeMethodHooks($classInstance, $method, $onceBeforeMethodName)
+    {
+        $staticKey = 'onceBefore'.ucfirst($method);
+
+        $staticHooks = isset(self::$staticHooks['global'][$staticKey]) ? self::$staticHooks['global'][$staticKey] : [];
+
+        if ( ! isset($this->globalOnceCalledMethods['before'][$onceBeforeMethodName]) && $staticHooks) {
+            if ( ! empty($staticHooks)) {
+                $return = $this->callAllHookCallables($classInstance, $method, $staticHooks);
+
+                $this->globalOnceCalledMethods['before'][$onceBeforeMethodName] = true;
+
+                if ($return !== null) {
+                    return $return;
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  object $classInstance
+     * @param  string $method
      * @param  array  $hooks
      *
      * @return mixed
@@ -782,9 +874,9 @@ trait HooksTrait
     /**
      * Currently checks for mismatching parameters
      *
-     * @param object   $classInstance
-     * @param callable $callable
-     * @param string   $method        [optional]
+     * @param object|string   $classInstance
+     * @param callable        $callable
+     * @param string          $method        [optional]
      */
     private static function checkCallable(
         $classInstance,
@@ -810,16 +902,9 @@ trait HooksTrait
                 $callableReflectionParameters = $callableReflection->getParameters();
             }
 
-            $callableParameters = [];
-            $originalParameters = [];
+            $originalParameters = self::getReflectionParameters($originalMethodReflectionParameters);
 
-            foreach ($originalMethodReflectionParameters as $parameter) {
-                $originalParameters[] = $parameter->getName();
-            }
-
-            foreach ($callableReflectionParameters as $parameter) {
-                $callableParameters[] = $parameter->getName();
-            }
+            $callableParameters = self::getReflectionParameters($callableReflectionParameters);
 
             $parameterOffset = 0;
 
@@ -857,41 +942,15 @@ trait HooksTrait
                 function ($item) {
                     return $item['original'] !== $item['callable'];
                 }
-            ); // remove matching fields
+            ); // remove matching fields, preserves keys
 
             if ($parameterDiff) {
-                $errorBuffer = [];
-
-                $lastCallableParameterIndex = count($callableParameters) - 1;
-
-                // issue a warning error if the parameters are named differently
-                foreach ($parameterDiff as $key => $parameter) {
-                    $originalPosition = $key + 1;
-                    $callablePosition = $key + 1 + $parameterOffset;
-
-                    $parameterNotInOriginal = $parameter['original'] === null && $parameter['callable'] !== null;
-                    $isLastCallableParameter = ($lastCallableParameterIndex === $key);
-
-                    if ($isLastCallableParameter && stripos($parameter['callable'], 'return') !== false) {
-                        continue;
-                    } elseif ($parameterNotInOriginal) {
-                        $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' does not "
-                            ."exist in the original {$method}() method as argument {$originalPosition}";
-                    } elseif ($parameter['original'] !== null && $parameter['callable'] === null) {
-                        $errorBuffer[] = "Callable argument {$callablePosition} exists in the original {$method}() "
-                            ."method as argument {$originalPosition} but is omitted in the callable";
-                    } elseif ($parameter['original'] !== $parameter['callable']) {
-                        $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' is named "
-                            ."'{$parameter['original']}' in the original {$method}() method as argument "
-                            ."{$originalPosition}";
-                    }
-                }
-
-                $message = implode("\n", $errorBuffer);
-
-                if ($message) {
-                    trigger_error($message, E_USER_NOTICE);
-                }
+                self::findParameterIssues(
+                    $method,
+                    $callableParameters,
+                    $parameterDiff,
+                    $parameterOffset
+                );
             }
         }
     }
@@ -1063,7 +1122,6 @@ trait HooksTrait
     {
         self::$hookableMethods = [];
     }
-
     public static function resetGlobalMethods()
     {
         self::$staticHooks['global'] = self::$staticHooksDefault['global'];
