@@ -1,7 +1,7 @@
 <?php
-namespace _2UpMedia\Hooky\Integration;
+namespace _2UpMedia\Hooky\integration;
 
-use _2UpMedia\Hooky\Fixtures\Client;
+use _2UpMedia\Hooky\fixtures\Client;
 use _2UpMedia\Hooky\CancelPropagationException;
 use _2UpMedia\Hooky\Constants;
 
@@ -272,13 +272,13 @@ class GenericTest extends BaseTestCase
         $client = new Client();
 
         $count = 0;
-        $client->beforeAllHook(function() use ($that, &$count) {
+        $client->beforeAllHook(function () use ($that, &$count) {
             ++$count;
 
             return true;
         });
 
-        $client->beforeAllHook(function() use ($that, &$count) {
+        $client->beforeAllHook(function () use ($that, &$count) {
             ++$count;
         });
 
@@ -292,13 +292,13 @@ class GenericTest extends BaseTestCase
         $client = new Client();
 
         $count = 0;
-        $client->onceBeforeAllHook(function() use ($that, &$count) {
+        $client->onceBeforeAllHook(function () use ($that, &$count) {
             ++$count;
 
             return true;
         });
 
-        $client->onceBeforeAllHook(function() use ($that, &$count) {
+        $client->onceBeforeAllHook(function () use ($that, &$count) {
             ++$count;
         });
 
@@ -312,13 +312,13 @@ class GenericTest extends BaseTestCase
         $client = new Client();
 
         $count = 0;
-        $client->onceBeforeGetTextHook(function($resourceLocation) use ($that, &$count) {
+        $client->onceBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
             return true;
         });
 
-        $client->onceBeforeGetTextHook(function($resourceLocation) use ($that, &$count) {
+        $client->onceBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
         });
 
@@ -456,13 +456,13 @@ class GenericTest extends BaseTestCase
         $this->setPublicAndProtectedAccessibility($client);
 
         $afterAllCount = 0;
-        $client->afterAllHook(function() use ($that, &$afterAllCount) {
+        $client->afterAllHook(function () use ($that, &$afterAllCount) {
             ++$afterAllCount;
 
             return true;
         });
 
-        $client->afterAllHook(function() use ($that, &$afterAllCount) {
+        $client->afterAllHook(function () use ($that, &$afterAllCount) {
             ++$afterAllCount;
         });
 
@@ -473,13 +473,13 @@ class GenericTest extends BaseTestCase
         $this->setPublicAndProtectedAccessibility($client);
 
         $onceAfterAllCount = 0;
-        $client->onceAfterAllHook(function() use ($that, &$onceAfterAllCount) {
+        $client->onceAfterAllHook(function () use ($that, &$onceAfterAllCount) {
             ++$onceAfterAllCount;
 
             return true;
         });
 
-        $client->onceAfterAllHook(function() use ($that, &$onceAfterAllCount) {
+        $client->onceAfterAllHook(function () use ($that, &$onceAfterAllCount) {
             ++$onceAfterAllCount;
         });
 
@@ -490,13 +490,13 @@ class GenericTest extends BaseTestCase
         $this->setPublicAndProtectedAccessibility($client);
 
         $onceAfterGetText = 0;
-        $client->onceAfterGetTextHook(function($resourceLocation) use ($that, &$onceAfterGetText) {
+        $client->onceAfterGetTextHook(function ($resourceLocation) use ($that, &$onceAfterGetText) {
             ++$onceAfterGetText;
 
             return true;
         });
 
-        $client->onceAfterGetTextHook(function($resourceLocation) use ($that, &$onceAfterGetText) {
+        $client->onceAfterGetTextHook(function ($resourceLocation) use ($that, &$onceAfterGetText) {
             ++$onceAfterGetText;
         });
 
@@ -582,12 +582,12 @@ class GenericTest extends BaseTestCase
         $this->setPublicAndProtectedAccessibility($client);
 
         $onceAfterGetText = 0;
-        $client->onceAfter_getTextHook(function($resourceLocation) use (&$onceAfterGetText) {
+        $client->onceAfter_getTextHook(function ($resourceLocation) use (&$onceAfterGetText) {
             ++$onceAfterGetText;
 
             return true;
         });
-        $client->onceAfter_getTextHook(function($resourceLocation) use (&$onceAfterGetText) {
+        $client->onceAfter_getTextHook(function ($resourceLocation) use (&$onceAfterGetText) {
             ++$onceAfterGetText;
         });
 
@@ -598,12 +598,12 @@ class GenericTest extends BaseTestCase
         $this->setPublicAndProtectedAccessibility($client);
 
         $afterGetText = 0;
-        $client->after_getTextHook(function($resourceLocation) use (&$afterGetText) {
+        $client->after_getTextHook(function ($resourceLocation) use (&$afterGetText) {
             ++$afterGetText;
 
             return true;
         });
-        $client->after_getTextHook(function($resourceLocation) use (&$afterGetText) {
+        $client->after_getTextHook(function ($resourceLocation) use (&$afterGetText) {
             ++$afterGetText;
         });
 
@@ -614,12 +614,12 @@ class GenericTest extends BaseTestCase
         $this->setPublicAndProtectedAccessibility($client);
 
         $beforeGetText = 0;
-        $client->before_getTextHook(function($resourceLocation) use (&$beforeGetText) {
+        $client->before_getTextHook(function ($resourceLocation) use (&$beforeGetText) {
             ++$beforeGetText;
 
             return true;
         });
-        $client->before_getTextHook(function($resourceLocation) use (&$beforeGetText) {
+        $client->before_getTextHook(function ($resourceLocation) use (&$beforeGetText) {
             ++$beforeGetText;
         });
 
@@ -630,12 +630,12 @@ class GenericTest extends BaseTestCase
         $this->setPublicAndProtectedAccessibility($client);
 
         $onceBeforeGetText = 0;
-        $client->onceBefore_getTextHook(function($resourceLocation) use (&$onceBeforeGetText) {
+        $client->onceBefore_getTextHook(function ($resourceLocation) use (&$onceBeforeGetText) {
             ++$onceBeforeGetText;
 
             return true;
         });
-        $client->onceBefore_getTextHook(function($resourceLocation) use (&$onceBeforeGetText) {
+        $client->onceBefore_getTextHook(function ($resourceLocation) use (&$onceBeforeGetText) {
             ++$onceBeforeGetText;
         });
 
@@ -649,7 +649,7 @@ class GenericTest extends BaseTestCase
         $this->setPublicAndProtectedAccessibility($client);
 
         $onceAfterGetText = 0;
-        $client->onceAfterGetTextHook(function($resourceLocation) use (&$onceAfterGetText) {
+        $client->onceAfterGetTextHook(function ($resourceLocation) use (&$onceAfterGetText) {
             ++$onceAfterGetText;
 
             return Constants::NULL;
@@ -742,7 +742,7 @@ class GenericTest extends BaseTestCase
         $that = $this;
 
         $this->client->afterGetTextHook(function ($resourceLocation) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertEquals('/path/to/resource', $resourceLocation);
         });
 

@@ -1,7 +1,7 @@
 <?php
-namespace _2UpMedia\Hooky\Integration;
+namespace _2UpMedia\Hooky\integration;
 
-use _2UpMedia\Hooky\Fixtures\Client;
+use _2UpMedia\Hooky\fixtures\Client;
 use _2UpMedia\Hooky\Constants;
 use _2UpMedia\Hooky\BaseTestCase;
 
@@ -21,23 +21,23 @@ class InstanceHooksTest extends BaseTestCase
         $that = $this;
 
         $this->client->before_getTextHook(function ($resourceLocation) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $this->client->beforeGetTextHook(array($this, 'getBeforeGetTextCallable'));
 
         $this->client->beforeGetTextHook(function ($resourceLocation) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertEquals('/path/to/resource1', $resourceLocation);
         });
 
         $this->client->beforeAllHook(function ($method) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertContains($method, ['getText', '_getText']);
         });
 
         $this->client->beforeAllHook(function ($method) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertContains($method, ['getText', '_getText']);
         });
 
@@ -54,14 +54,11 @@ class InstanceHooksTest extends BaseTestCase
     {
         $resourceLocation = '/path/to/resource1';
 
-        $this->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $instance);
+        $this->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $instance);
         $this->assertEquals('/path/to/resource1', $resourceLocation);
+
         return $resourceLocation;
     }
-
-
-
-
 
     public function testOnceBeforePublicMethod()
     {
@@ -75,7 +72,7 @@ class InstanceHooksTest extends BaseTestCase
         $this->client->onceBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertEquals('/path/to/resource', $resourceLocation);
         });
 
@@ -102,7 +99,7 @@ class InstanceHooksTest extends BaseTestCase
         $this->client->onceBefore_getTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $this->client->getText('/path/to/resource');
@@ -122,7 +119,7 @@ class InstanceHooksTest extends BaseTestCase
         $this->client->onceBeforeAllHook(function ($method) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertContains($method, ['getText', '_getText']);
         });
 
@@ -147,7 +144,7 @@ class InstanceHooksTest extends BaseTestCase
 
             $resourceLocation = '/path/to/resource1';
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertEquals('/path/to/resource1', $resourceLocation);
         });
 
@@ -168,7 +165,7 @@ class InstanceHooksTest extends BaseTestCase
         $this->client->onceAfterAllHook(function ($method) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertContains($method, ['getText', '_getText']);
         });
 
@@ -195,7 +192,7 @@ class InstanceHooksTest extends BaseTestCase
         $this->client->after_getTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $this->client->getText('/path/to/resource');
@@ -221,7 +218,7 @@ class InstanceHooksTest extends BaseTestCase
         $this->client->afterPrivateMethodHook(function () use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $this->client->publicMethod();
@@ -244,56 +241,50 @@ class InstanceHooksTest extends BaseTestCase
         $that = $this;
 
         $this->client->after_getTextHook(function ($resourceLocation) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $this->client->afterGetTextHook(function (&$resourceLocation) use ($that) {
             $resourceLocation = '/path/to/resource1';
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertEquals('/path/to/resource1', $resourceLocation);
         });
 
         $this->client->afterGetTextHook(function ($resourceLocation) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertEquals('/path/to/resource1', $resourceLocation);
         });
 
         $this->client->afterAllHook(function ($method) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertContains($method, ['getText', '_getText']);
         });
 
         $this->client->afterAllHook(function ($method) use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertContains($method, ['getText', '_getText']);
         });
 
         $this->client->getText('/path/to/resource');
     }
 
-
-
-
-
-
-
     public function testConstructorHooks()
     {
-//        $this->markTestIncomplete('r');
-
         $this->setPublicAccessible();
 
         $beforeCount = 0;
         $beforeCallable = function ($parameterOne, $parameterTwo) use (&$beforeCount) {
             ++$beforeCount;
         };
+
         Client::beforeConstructorHook($beforeCallable);
 
         $afterCount = 0;
         $afterCallable = function () use (&$afterCount) {
             ++$afterCount;
         };
+
         Client::afterConstructorHook($afterCallable);
 
         $one = new Client();
@@ -347,7 +338,5 @@ class InstanceHooksTest extends BaseTestCase
 
         $this->assertEquals('/path/to/resource', $client->getText('/path/to/resource'));
     }
-
-
 
 }

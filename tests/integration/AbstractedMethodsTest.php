@@ -1,12 +1,9 @@
 <?php
-namespace _2UpMedia\Hooky\Integration;
+namespace _2UpMedia\Hooky\integration;
 
-//require_once __DIR__.'/../fixtures/Client.php'; // TODO: figure out how to remove this without losing code coverage
-
-use _2UpMedia\Hooky\Fixtures\InterfacedClass;
-use _2UpMedia\Hooky\Constants;
-use _2UpMedia\Hooky\Fixtures\ConcreteAbstractClass;
-use _2UpMedia\Hooky\Fixtures\SubclassedConcreteAbstract;
+use _2UpMedia\Hooky\fixtures\InterfacedClass;
+use _2UpMedia\Hooky\fixtures\ConcreteAbstractClass;
+use _2UpMedia\Hooky\fixtures\SubclassedConcreteAbstract;
 
 use _2UpMedia\Hooky\BaseTestCase;
 
@@ -19,7 +16,7 @@ class AbstractedMethodsTest extends BaseTestCase
     {
         $this->interfacedClass = new InterfacedClass();
         $this->concreteAbstract = new ConcreteAbstractClass();
-        $this->subclassedConcreteAbstract = new SubclassedConcreteAbstract;
+        $this->subclassedConcreteAbstract = new SubclassedConcreteAbstract();
     }
 
     public function testInterfaceConcreteMethod()
@@ -27,7 +24,7 @@ class AbstractedMethodsTest extends BaseTestCase
         $that = $this;
 
         $this->interfacedClass->beforeTestHook(function () use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\InterfacedClass', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\InterfacedClass', $this);
         });
     }
 
@@ -36,7 +33,7 @@ class AbstractedMethodsTest extends BaseTestCase
         $that = $this;
 
         $this->concreteAbstract->beforeTestHook(function () use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\InterfacedClass', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\InterfacedClass', $this);
         });
     }
 
@@ -45,8 +42,7 @@ class AbstractedMethodsTest extends BaseTestCase
         $that = $this;
 
         $this->subclassedConcreteAbstract->beforeTestHook(function () use ($that) {
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\InterfacedClass', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\InterfacedClass', $this);
         });
     }
 }
- 

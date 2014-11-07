@@ -1,5 +1,5 @@
 <?php
-namespace _2UpMedia\Hooky\Fixtures;
+namespace _2UpMedia\Hooky\fixtures;
 
 abstract class AbstractClass
 {

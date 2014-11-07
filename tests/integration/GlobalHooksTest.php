@@ -1,8 +1,8 @@
 <?php
-namespace _2UpMedia\Hooky\Integration;
+namespace _2UpMedia\Hooky\integration;
 
 use _2UpMedia\Hooky\BaseTestCase;
-use _2UpMedia\Hooky\Fixtures\Client;
+use _2UpMedia\Hooky\fixtures\Client;
 
 class GlobalHooksTest extends BaseTestCase
 {
@@ -15,7 +15,7 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalBeforeAllHook(function ($method) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertContains($method, ['getText', '_getText']);
         });
 
@@ -38,7 +38,7 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalAfterAllHook(function ($method) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
             $that->assertContains($method, ['getText', '_getText']);
         });
 
@@ -61,7 +61,7 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalAfterGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $resourceLocation = '/path/to/resource';
@@ -83,7 +83,7 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $resourceLocation = '/path/to/resource';
@@ -105,7 +105,7 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalOnceBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $resourceLocation = '/path/to/resource';
@@ -127,7 +127,7 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalOnceAfterGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $resourceLocation = '/path/to/resource';
@@ -149,7 +149,7 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalOnceBeforeAllHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $resourceLocation = '/path/to/resource';
@@ -171,7 +171,7 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalOnceAfterAllHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $resourceLocation = '/path/to/resource';
@@ -193,13 +193,13 @@ class GlobalHooksTest extends BaseTestCase
         Client::globalBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         Client::globalBeforeGetTextHook(function ($resourceLocation) use ($that, &$count) {
             ++$count;
 
-            $that->assertInstanceOf('_2UpMedia\Hooky\Fixtures\Client', $this);
+            $that->assertInstanceOf('_2UpMedia\Hooky\fixtures\Client', $this);
         });
 
         $resourceLocation = '/path/to/resource';
@@ -217,4 +217,3 @@ class GlobalHooksTest extends BaseTestCase
         Client::resetGlobalMethods();
     }
 }
- 

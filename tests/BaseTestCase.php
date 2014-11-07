@@ -3,7 +3,7 @@ namespace _2UpMedia\Hooky;
 
 require_once __DIR__.'/fixtures/Client.php'; // TODO: figure out how to remove this without losing code coverage
 
-use _2UpMedia\Hooky\Fixtures\Client;
+use _2UpMedia\Hooky\fixtures\Client;
 
 class BaseTestCase extends \PHPUnit_Framework_TestCase
 {
@@ -20,7 +20,7 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
     /**
      * @param object $object
      * @param string $method
-     * @param array $args
+     * @param array  $args
      *
      * @return mixed
      */
@@ -28,6 +28,7 @@ class BaseTestCase extends \PHPUnit_Framework_TestCase
     {
         $reflectionMethod = new \ReflectionMethod($object, $method);
         $reflectionMethod->setAccessible(true);
+
         return $reflectionMethod->invokeArgs($object, $args);
     }
 
