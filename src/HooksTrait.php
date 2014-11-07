@@ -832,11 +832,19 @@ trait HooksTrait
             if ($parameterDiff) {
                 $errorBuffer = [];
 
-                // issue a warning error if the parameters are named different
+                $lastCallableParameterIndex = count($callableParameters) - 1;
+
+                // issue a warning error if the parameters are named differently
                 foreach ($parameterDiff as $key => $parameter) {
                     $originalPosition = $key + 1;
                     $callablePosition = $key + 1 + $parameterOffset;
-                    if ($parameter['original'] === null && $parameter['callable'] !== null) {
+
+                    $parameterNotInOriginal = $parameter['original'] === null && $parameter['callable'] !== null;
+                    $isLastCallableParameter = ($lastCallableParameterIndex === $key);
+
+                    if ($isLastCallableParameter && stripos($parameter['callable'], 'return') !== false) {
+                        continue;
+                    } elseif ($parameterNotInOriginal) {
                         $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' does not "
                             ."exist in the original {$method}() method as argument {$originalPosition}";
                     } elseif ($parameter['original'] !== null && $parameter['callable'] === null) {
@@ -851,7 +859,9 @@ trait HooksTrait
 
                 $message = implode("\n", $errorBuffer);
 
-                trigger_error($message, E_USER_NOTICE);
+                if ($message) {
+                    trigger_error($message, E_USER_NOTICE);
+                }
             }
         }
     }
