@@ -1,6 +1,7 @@
 ## Unreleased
 - Restricting the ability to return values
 - Restricting hook actions
+- Global constructor hooks
 
 ## 0.1.0 - 2014-11-06
 ### Added

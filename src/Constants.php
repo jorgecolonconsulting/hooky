@@ -15,7 +15,7 @@ class Constants
     /**
      * NOT based on ReflectionMethod::IS_ABSTRACT
      */
-    const ABSTRACT_ACCESSIBLE = 8;
+    const ABSTRACT_ONLY = 8;
 
     const NULL = 'h06d78sa0fhu2987680dah;106^!&^(^('; // random identifier to make this constant unique
 }

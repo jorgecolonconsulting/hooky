@@ -1,1 +1,2 @@
-/tests  export-ignore
+/tests      export-ignore
+demo.php    export-ignore

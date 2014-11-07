@@ -3,14 +3,14 @@ namespace _2UpMedia\Hooky\fixtures;
 
 class Client
 {
-    use \_2UpMedia\Hooky\HooksTrait { __destruct as mainDestruct; }
+    use \_2UpMedia\Hooky\HooksTrait { __destruct as traitDestruct; }
 
     public function __construct($parameterOne = 'one', $parameterTwo = 'two')
     {
         $this->callBeforeConstructorHooks($this, [$parameterOne, $parameterTwo]);
         $this->callAfterConstructorHooks($this, [$parameterOne, $parameterTwo]);
 
-        self::$debugMode = true;
+        self::$checkCallableParameters = true;
     }
 
     public function getText($resourceLocation)
@@ -68,7 +68,7 @@ class Client
 
     public function __destruct()
     {
-        $this->mainDestruct();
+        $this->traitDestruct();
 
         $this->callBeforeMethodHooks($this, __METHOD__);
         $this->callAfterMethodHooks($this, __METHOD__);

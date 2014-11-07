@@ -212,6 +212,16 @@ class GlobalHooksTest extends BaseTestCase
         $this->assertEquals(6, $count);
     }
 
+    public function testGlobalBeforeConstructor()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testGlobalAfterConstructor()
+    {
+        $this->markTestIncomplete();
+    }
+
     public function tearDown()
     {
         Client::resetGlobalMethods();

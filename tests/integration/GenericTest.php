@@ -19,16 +19,6 @@ class GenericTest extends BaseTestCase
         $this->client = new Client();
     }
 
-    public function testRestrictEarlyReturn()
-    {
-        $this->markTestIncomplete();
-    }
-
-    public function testRestrictHookAction()
-    {
-        $this->markTestIncomplete();
-    }
-
     public function testCapitalCasedMethod()
     {
         $this->setPublicAccessible();
@@ -723,7 +713,7 @@ class GenericTest extends BaseTestCase
         $this->callInaccessibleMethodWithArgs(
             $this->client,
             'setDefaultAccessibility',
-            [Constants::PUBLIC_ACCESSIBLE | Constants::ABSTRACT_ACCESSIBLE]
+            [Constants::PUBLIC_ACCESSIBLE | Constants::ABSTRACT_ONLY]
         );
 
         $this->callInaccessibleMethodWithArgs($this->client, 'methodNotRestricted', ['getText']);
@@ -827,5 +817,15 @@ class GenericTest extends BaseTestCase
         });
 
         $this->client->getText('/path/to/resource');
+    }
+
+    public function testRestrictEarlyReturn()
+    {
+        $this->markTestIncomplete();
+    }
+
+    public function testRestrictHookAction()
+    {
+        $this->markTestIncomplete();
     }
 }
