@@ -478,7 +478,7 @@ trait HooksTrait
         $method = self::getCalledMethod($method);
 
         $onceBeforeMethodName = 'onceBefore'.ucfirst($method);
-        if (! isset($this->onceCalledMethods['before'][$onceBeforeMethodName])) {
+        if ( ! isset($this->onceCalledMethods['before'][$onceBeforeMethodName])) {
             if (isset($this->hooks[$onceBeforeMethodName])) {
                 foreach ($this->hooks[$onceBeforeMethodName] as $callable) {
                     try {
@@ -572,7 +572,7 @@ trait HooksTrait
 
         $hooks = $this->hooks['once']['beforeAll'];
 
-        if (! $this->onceBeforeCalled && $hooks) {
+        if ( ! $this->onceBeforeCalled && $hooks) {
 
             if ( ! empty($hooks)) {
                 $return = $this->callAllHookCallables($classInstance, $method, $hooks);
@@ -876,7 +876,7 @@ trait HooksTrait
     {
         $matches = null;
         foreach ($regexes as $regex) {
-            if (! in_array(preg_match("/$regex/", $subject, $matches), [0, false])) {
+            if ( ! in_array(preg_match("/$regex/", $subject, $matches), [0, false])) {
                 return $matches;
             }
         }
@@ -904,7 +904,7 @@ trait HooksTrait
      */
     private static function methodExists($methodName)
     {
-        if (! method_exists(get_called_class(), $methodName)) {
+        if ( ! method_exists(get_called_class(), $methodName)) {
             throw new \BadMethodCallException("$methodName doesn't exist");
         }
 
@@ -1001,7 +1001,7 @@ trait HooksTrait
     /**
      * Special method that allows null values to be returned from callables
      *
-     * @param mixed $return
+     * @param  mixed      $return
      * @return null|mixed
      */
     protected function hookReturn($return)
