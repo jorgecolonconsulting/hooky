@@ -237,7 +237,7 @@ The format is: `{$instanceVariable}->{action}[ {Method} ]Hook`
 
 ### Check potential bugs before going out to production
 
-The `{ClassName}::$checkCallableParameters` flag triggers PHP Notices on different issues where method parameters don't match up with the callables set up through hooks. This is handy during development to catch potential bugs. By default it is turned off because of a potential performance hit.
+The `{ClassName}::$checkCallableParameters` flag triggers PHP Notices on different issues where method parameters don't match up with the callables set up through hooks. This is handy during development to catch potential bugs. By default it is turned on to reduce bugs immediately. Turn it off in a production environment.
 
 ### Restricting hooking to specific methods
 

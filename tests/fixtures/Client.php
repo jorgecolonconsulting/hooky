@@ -9,8 +9,6 @@ class Client
     {
         $this->callBeforeConstructorHooks($this, [$parameterOne, $parameterTwo]);
         $this->callAfterConstructorHooks($this, [$parameterOne, $parameterTwo]);
-
-        self::$checkCallableParameters = true;
     }
 
     public function getText($resourceLocation)

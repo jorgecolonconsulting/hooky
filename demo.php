@@ -11,7 +11,7 @@ class HelloWorld
     }
 }
 
-HelloWorld::globalBeforeAllHook(function() {
+HelloWorld::globalBeforeAllHook(function () {
     echo 'hello world';
 });
 
