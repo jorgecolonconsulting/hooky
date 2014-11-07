@@ -2,7 +2,7 @@
 
 # Hooky
 
-Easily and reliably allow your classes to be extendable without allowing people to touch your core code. Some inspiration came from Aspect Oriented Programming.
+Easily and reliably allow your classes to be hooked into without allowing people to touch your core code. Some inspiration came from Aspect Oriented Programming.
 
 ## Audience
 
@@ -232,3 +232,5 @@ public function __destruct()
 {
     $this->traitDestruct();
 ```
+
+keywords: aop, hook, event, pub, sub
