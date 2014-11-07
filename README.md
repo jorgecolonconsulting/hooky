@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/2upmedia/hooky.svg)](https://travis-ci.org/2upmedia/hooky)
+
 # Hooky
 
 Easily and reliably allow your classes to be extendable without allowing people to touch your core code. Some inspiration came from Aspect Oriented Programming.
