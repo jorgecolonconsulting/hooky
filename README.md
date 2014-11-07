@@ -19,6 +19,7 @@ Authors of packages or developers extending existing packages and anyone that ne
 - PSR2 and PSR4
 - 99% code coverage thanks to TDD
 - Perfectly-spaced, hand-crafted PHPDocs
+- Semantic Versioning (currently in initial development phase)
 
 ## Examples
 
