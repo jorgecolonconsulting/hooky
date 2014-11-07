@@ -23,24 +23,25 @@ Authors of packages or developers extending existing packages and anyone that ne
 
 ## Examples
 
-	<?php
-    require 'vendor/autoload.php';
-    
-    class HelloWorld
+```php
+require 'vendor/autoload.php';
+
+class HelloWorld
+{
+    use _2UpMedia\Hooky\HooksTrait;
+
+    public function sayIt()
     {
-        use _2UpMedia\Hooky\HooksTrait;
-    
-        public function sayIt()
-        {
-            $this->callBeforeHooks($this, __METHOD__);
-        }
+        $this->callBeforeHooks($this, __METHOD__);
     }
-    
-    HelloWorld::globalBeforeAllHook(function() {
-        echo 'hello world';
-    });
-    
-    (new HelloWorld())->sayIt(); // echos hello world
+}
+
+HelloWorld::globalBeforeAllHook(function() {
+    echo 'hello world';
+});
+
+(new HelloWorld())->sayIt(); // echos hello world
+```
     
 ## Check out demos with well-known packages
 
@@ -66,11 +67,12 @@ For instance, if you don't want to allow beforeAll hooks for your method, but yo
 
 Early returns are possible using the following format right before your core method code:
 
-	<?php
-	public function foo($methodParameter){
-		if (($hookReturn = $this->callBeforeHooks($this, __METHOD__, [$methodParameter])) !== null) {
-	        return $hookReturn;
-	    }
+```php
+public function foo($methodParameter){
+	if (($hookReturn = $this->callBeforeHooks($this, __METHOD__, [$methodParameter])) !== null) {
+        return $hookReturn;
+    }
+```
     
 **Note:** The first applicable registered hook that returns a value will cancel all successively registered hooks for that method. 
 
@@ -80,68 +82,70 @@ Early returns are possible using the following format right before your core met
 
 Just send parameters as references
 
-	<?php
-	// method hook
-	public function foo($methodParameter){
-        if (($hookReturn = $this->callBeforeHooks($this, __METHOD__, [&$methodParameter])) !== null) {
-            return $hookReturn;
-        }
-    
-    // in your callable you also mark the parameter as a reference
-    $bar->afterFooHook(function (&$methodParameter) {
-        $methodParameter = 'Some other value';
-    });
-    
+```php
+// method hook
+public function foo($methodParameter){
+    if (($hookReturn = $this->callBeforeHooks($this, __METHOD__, [&$methodParameter])) !== null) {
+        return $hookReturn;
+    }
 
+// in your callable you also mark the parameter as a reference
+$bar->afterFooHook(function (&$methodParameter) {
+    $methodParameter = 'Some other value';
+});
+```
+    
 #### Handling returned null values
 
 Return the special NULL constant and also make sure to use `hookReturn()` when you set up your hooks.
 
-	<?php
-	// method hook
-	public function foo($methodParameter){
-        if (($hookReturn = $this->callBeforeHooks($this, __METHOD__, [&$methodParameter])) !== null) {
-            return $this->hookReturn($hookReturn);
-        }
-    
-    // in your callable
-    use _2UpMedia\Hooky\Constants;
-    
-    $bar->afterFooHook(function ($methodParameter) {
-        return Constants::NULL;
-    });
-    
+```php
+// method hook
+public function foo($methodParameter){
+    if (($hookReturn = $this->callBeforeHooks($this, __METHOD__, [&$methodParameter])) !== null) {
+        return $this->hookReturn($hookReturn);
+    }
 
+// in your callable
+use _2UpMedia\Hooky\Constants;
+
+$bar->afterFooHook(function ($methodParameter) {
+    return Constants::NULL;
+});
+```
+    
 #### Allowing original return value to be manipulated in your after hooks
 
 **NOTE:** use with care
 
-	<?php
-	// method hook
-	public function foo($methodParameter){
-		// do some awesome stuff with $methodParameter;
-		$return = $this->wowwow($methodParameter); // split core return value into a variable
-		
-        if (($hookReturn = $this->callAfterHooks($this, __METHOD__, [$methodParameter, $return])) !== null) {
-            return $this->hookReturn($hookReturn);
-        }
-        
-        return $return; // very important in case you don't have any hooks returning values
+```php
+// method hook
+public function foo($methodParameter){
+	// do some awesome stuff with $methodParameter;
+	$return = $this->wowwow($methodParameter); // split core return value into a variable
+	
+    if (($hookReturn = $this->callAfterHooks($this, __METHOD__, [$methodParameter, $return])) !== null) {
+        return $this->hookReturn($hookReturn);
+    }
+    
+    return $return; // very important in case you don't have any hooks returning values
+```
 
 
 #### Cancelling propagation
 
-	<?php
-	// in your callable
-    use _2UpMedia\Hooky\CancelPropagationException;
-    
-    $bar->afterFooHook(function ($methodParameter) {
-        throw new CancelPropagationException('buahahahaha!');
-    });
-    
-    $bar->afterFooHook(function ($methodParameter) {
-        // this one never gets called
-    });
+```php
+// in your callable
+use _2UpMedia\Hooky\CancelPropagationException;
+
+$bar->afterFooHook(function ($methodParameter) {
+    throw new CancelPropagationException('buahahahaha!');
+});
+
+$bar->afterFooHook(function ($methodParameter) {
+    // this one never gets called
+});
+```
 
 ### Default behavior
 
@@ -153,16 +157,18 @@ To reduce the risk of hooks breaking because of the underlying libraries being r
 
 You can restrict hooking to the following types of methods using `setDefaultAccessibility()`: public, protected, private, and/or abstract/interface method.
 	
-	use _2UpMedia\Hooky\Constants;
-	
-	// allow hooking to public methods
-	$this->setDefaultAccessibility(Constants::PUBLIC_ACCESSIBLE);
-	
-	// allow hooking to public and protected methods
-	$this->setDefaultAccessibility(Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE);
-	
-	// allow hooking ONLY to public and protected abstract methods
-	$this->setDefaultAccessibility(Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE | Constants::ABSTRACT_ONLY );
+```php
+use _2UpMedia\Hooky\Constants;
+
+// allow hooking to public methods
+$this->setDefaultAccessibility(Constants::PUBLIC_ACCESSIBLE);
+
+// allow hooking to public and protected methods
+$this->setDefaultAccessibility(Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE);
+
+// allow hooking ONLY to public and protected abstract methods
+$this->setDefaultAccessibility(Constants::PUBLIC_ACCESSIBLE | Constants::PROTECTED_ACCESSIBLE | Constants::ABSTRACT_ONLY );
+```
 	
 ### Class-wide hooks
 
@@ -180,12 +186,13 @@ The format is: `{ClassName}::global{Action}[ {Method} ]Hook`
 - `{ClassName}::globalOnceAfter{Method}Hook`
 
 
-	<?php
-	Bar::globalBeforeAllHook(function ($) {
-		var_dump(
-    });
-    
-    $bar->foo();
+```php
+Bar::globalBeforeAllHook(function ($) {
+	var_dump(
+});
+
+$bar->foo();
+```
 
 ### Instance-specific hooks
 
@@ -214,9 +221,10 @@ In the `__construct()` of your concrete class call `$this->setHookableMethods(['
 
 Because of the nature of Traits, `__destruct()` will be overridden if the implemented class already has them. The workaround is to use an alias.
 
-	<?php
-	use \_2UpMedia\Hooky\HooksTrait { __destruct as traitDestruct; }
-	
-	public function __destruct()
-    {
-        $this->traitDestruct();
+```php
+use \_2UpMedia\Hooky\HooksTrait { __destruct as traitDestruct; }
+
+public function __destruct()
+{
+    $this->traitDestruct();
+```
