@@ -21,7 +21,7 @@ class Client
 
         $return = $this->_getText($resourceLocation);
 
-        if (($hookReturn = $this->callAfterHooks($this, __METHOD__, [&$resourceLocation])) !== null) {
+        if (($hookReturn = $this->callAfterHooks($this, __METHOD__, [&$resourceLocation, $return])) !== null) {
             return $this->hookReturn($hookReturn); // allowing the return of nulls is optional
         }
 

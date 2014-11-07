@@ -52,6 +52,16 @@ class GenericTest extends BaseTestCase
         $this->assertEquals(1, $count);
     }
 
+    public function testReturnCallableParameter()
+    {
+        $this->setPublicAccessible();
+
+        $this->client->afterGetTextHook(function ($resourceLocation, $return) {
+        });
+
+        $this->client->getText('/path/to/resource');
+    }
+
     /**
      * @expectedException \PHPUnit_Framework_Error_Notice
      * @expectedExceptionMessage Callable argument 2 'nonexistantParameter' does not exist in the original getText()
