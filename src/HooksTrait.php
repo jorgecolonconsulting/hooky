@@ -288,7 +288,7 @@ trait HooksTrait
             self::$staticHooks['global'][self::$staticHooksNotRestricted[$method]][] = $callable;
 
             return true;
-        } elseif (($matches = self::matchesAny($callableRegistrationTokens, $method)) != false) {
+        } elseif (($matches = self::matchesAny($callableRegistrationTokens, $method)) !== null) {
             if ( ! empty($matches[2])) {
                 self::methodExists($matches[2]);
             }

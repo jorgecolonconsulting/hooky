@@ -2,6 +2,7 @@
     "name": "2upmedia/hooky",
     "description": "Easily allow your classes to be hooked into. tags: aop, hook, event, pub, sub",
     "version": "0.1.0",
+    "license": "MIT",
     "authors": [
         {
             "name": "Jorge Colon",
