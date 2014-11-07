@@ -1,6 +1,6 @@
 # Hooky
 
-Easily and reliably allow your classes to be extendable without allowing people to hack your core code. Some inspiration came from Aspect Oriented Programming.
+Easily and reliably allow your classes to be extendable without allowing people to touch your core code. Some inspiration came from Aspect Oriented Programming.
 
 ## Audience
 
@@ -75,6 +75,8 @@ Early returns are possible using the following format right before your core met
 
 #### Allowing parameters to be overridden
 
+**NOTE:** use with care
+
 Just send parameters as references
 
 	<?php
@@ -110,6 +112,8 @@ Return the special NULL constant and also make sure to use `hookReturn()` when y
     
 
 #### Allowing original return value to be manipulated in your after hooks
+
+**NOTE:** use with care
 
 	<?php
 	// method hook
