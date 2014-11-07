@@ -45,6 +45,8 @@ HelloWorld::globalBeforeAllHook(function() {
     
 ## Check out demos with well-known packages
 
+https://github.com/2upmedia/hooky-demos
+
 ## Documentation
 
 ### Making your classes hooky-compatible
