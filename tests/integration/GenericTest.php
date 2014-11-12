@@ -63,8 +63,6 @@ class GenericTest extends BaseTestCase
 
         $this->client->beforeGetTextHook(function ($resourceLocation, $nonexistantParameter) {
         });
-
-        $this->client->getText('/path/to/resource');
     }
 
     /**
@@ -78,8 +76,6 @@ class GenericTest extends BaseTestCase
 
         $this->client->beforeGetTextHook(function () {
         });
-
-        $this->client->getText('/path/to/resource');
     }
 
     /**
@@ -93,8 +89,6 @@ class GenericTest extends BaseTestCase
 
         $this->client->beforeGetTextHook(function ($uri) {
         });
-
-        $this->client->getText('/path/to/resource');
     }
 
     public function testCancelPropagation()

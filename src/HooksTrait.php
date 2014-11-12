@@ -72,65 +72,7 @@ trait HooksTrait
 
     private static $staticHooksNotRestricted = [];
 
-    public static $checkCallableParameters = false;
-
-    /**
-     * @param $method
-     * @param $callableParameters
-     * @param $parameterDiff
-     * @param $parameterOffset
-     * @return array
-     */
-    private static function findParameterIssues($method, $callableParameters, $parameterDiff, $parameterOffset)
-    {
-        $errorBuffer = [];
-
-        $lastCallableParameterIndex = count($callableParameters) - 1;
-
-        // issue a warning error if the parameters are named differently
-        foreach ($parameterDiff as $key => $parameter) {
-            $originalPosition = $key + 1;
-            $callablePosition = $key + 1 + $parameterOffset;
-
-            $parameterNotInOriginal = $parameter['original'] === null && $parameter['callable'] !== null;
-            $isLastCallableParameter = ($lastCallableParameterIndex === $key);
-
-            if ($isLastCallableParameter && stripos($parameter['callable'], 'return') !== false) {
-                continue;
-            } elseif ($parameterNotInOriginal) {
-                $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' does not "
-                    ."exist in the original {$method}() method as argument {$originalPosition}";
-            } elseif ($parameter['original'] !== null && $parameter['callable'] === null) {
-                $errorBuffer[] = "Callable argument {$callablePosition} exists in the original {$method}() "
-                    ."method as argument {$originalPosition} but is omitted in the callable";
-            } elseif ($parameter['original'] !== $parameter['callable']) {
-                $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' is named "
-                    ."'{$parameter['original']}' in the original {$method}() method as argument "
-                    ."{$originalPosition}";
-            }
-        }
-
-        $message = implode("\n", $errorBuffer);
-
-        if ($message) {
-            trigger_error($message, E_USER_NOTICE);
-        }
-    }
-
-    /**
-     * @param  \ReflectionParameter[] $reflectionParameters
-     * @return array
-     */
-    private static function getReflectionParameters(array $reflectionParameters)
-    {
-        $buffer = [];
-
-        foreach ($reflectionParameters as $parameter) {
-            $buffer[] = $parameter->getName();
-        }
-
-        return $buffer;
-    }
+    public static $checkCallableParameters = true;
 
     /**
      * Set bitewise options as such
@@ -304,6 +246,51 @@ trait HooksTrait
             self::checkCallable(get_called_class(), $callable, $targetMethod);
 
             self::$staticHooks['global'][$hookName][] = $callable;
+
+            return true;
+        } elseif (strpos($method, 'call') === false) {
+            throw new \BadMethodCallException("There's a typo in $method. Can't properly set up hook.");
+        }
+    }
+
+    /**
+     * @param  string   $method
+     * @param  callable $callable
+     *
+     * @return bool
+     *
+     * @throws \BadMethodCallException
+     *
+     */
+    private function registerMethodHook($method, callable $callable)
+    {
+        $callableRegistrationTokens = [
+            '^(after)(.*)(Hook)',
+            '^(before)(.*)(Hook)',
+            '^(onceAfter)(.*)(Hook)',
+            '^(onceBefore)(.*)(Hook)'
+        ];
+
+        if (isset($this->hooksNotRestricted[$method])) {
+            $this->hooks[$this->hooksNotRestricted[$method]][] = $callable;
+
+            return true;
+        } elseif (($matches = self::matchesAny($callableRegistrationTokens, $method)) !== null) {
+            if ( ! empty($matches[2])) {
+                self::methodExists($matches[2]);
+            }
+
+            $targetMethod = lcfirst($matches[2]);
+
+            self::methodNotRestricted($targetMethod, $method);
+
+            $hookName = $matches[1].$matches[2];
+
+            $this->hooksNotRestricted[$method] = $hookName;
+
+            self::checkCallable($this, $callable, $targetMethod);
+
+            $this->hooks[$hookName][] = $callable;
 
             return true;
         } elseif (strpos($method, 'call') === false) {
@@ -798,51 +785,6 @@ trait HooksTrait
     }
 
     /**
-     * @param  string   $method
-     * @param  callable $callable
-     *
-     * @return bool
-     *
-     * @throws \BadMethodCallException
-     *
-     */
-    private function registerMethodHook($method, callable $callable)
-    {
-        $callableRegistrationTokens = [
-            '^(after)(.*)(Hook)',
-            '^(before)(.*)(Hook)',
-            '^(onceAfter)(.*)(Hook)',
-            '^(onceBefore)(.*)(Hook)'
-        ];
-
-        if (isset($this->hooksNotRestricted[$method])) {
-            $this->hooks[$this->hooksNotRestricted[$method]][] = $callable;
-
-            return true;
-        } elseif (($matches = self::matchesAny($callableRegistrationTokens, $method)) !== null) {
-            if ( ! empty($matches[2])) {
-                self::methodExists($matches[2]);
-            }
-
-            $targetMethod = lcfirst($matches[2]);
-
-            self::methodNotRestricted($targetMethod, $method);
-
-            $hookName = $matches[1].$matches[2];
-
-            $this->hooksNotRestricted[$method] = $hookName;
-
-            self::checkCallable($this, $callable, $targetMethod);
-
-            $this->hooks[$hookName][] = $callable;
-
-            return true;
-        } elseif (strpos($method, 'call') === false) {
-            throw new \BadMethodCallException("There's a typo in $method. Can't properly set up hook.");
-        }
-    }
-
-    /**
      * @param  object   $classInstance
      * @param  callable $callable               parameters sent to callable: ($classInstance, $method [, $args]) if
      *                                         $method string is sent internally, ($classInstance [, $args]) if $method
@@ -953,6 +895,64 @@ trait HooksTrait
                 );
             }
         }
+    }
+
+    /**
+     * @param $method
+     * @param $callableParameters
+     * @param $parameterDiff
+     * @param $parameterOffset
+     * @return array
+     */
+    private static function findParameterIssues($method, $callableParameters, $parameterDiff, $parameterOffset)
+    {
+        $errorBuffer = [];
+
+        $lastCallableParameterIndex = count($callableParameters) - 1;
+
+        // issue a warning error if the parameters are named differently
+        foreach ($parameterDiff as $key => $parameter) {
+            $originalPosition = $key + 1;
+            $callablePosition = $key + 1 + $parameterOffset;
+
+            $parameterNotInOriginal = $parameter['original'] === null && $parameter['callable'] !== null;
+            $isLastCallableParameter = ($lastCallableParameterIndex === $key);
+
+            if ($isLastCallableParameter && stripos($parameter['callable'], 'return') !== false) {
+                continue;
+            } elseif ($parameterNotInOriginal) {
+                $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' does not "
+                    ."exist in the original {$method}() method as argument {$originalPosition}";
+            } elseif ($parameter['original'] !== null && $parameter['callable'] === null) {
+                $errorBuffer[] = "Callable argument {$callablePosition} exists in the original {$method}() "
+                    ."method as argument {$originalPosition} but is omitted in the callable";
+            } elseif ($parameter['original'] !== $parameter['callable']) {
+                $errorBuffer[] = "Callable argument {$callablePosition} '{$parameter['callable']}' is named "
+                    ."'{$parameter['original']}' in the original {$method}() method as argument "
+                    ."{$originalPosition}";
+            }
+        }
+
+        $message = implode("\n", $errorBuffer);
+
+        if ($message) {
+            trigger_error($message, E_USER_NOTICE);
+        }
+    }
+
+    /**
+     * @param  \ReflectionParameter[] $reflectionParameters
+     * @return array
+     */
+    private static function getReflectionParameters(array $reflectionParameters)
+    {
+        $buffer = [];
+
+        foreach ($reflectionParameters as $parameter) {
+            $buffer[] = $parameter->getName();
+        }
+
+        return $buffer;
     }
 
     /**
